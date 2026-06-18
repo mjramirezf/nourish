@@ -1,0 +1,2113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nourish</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cream: #F7F3EE; --warm-white: #FDFAF7;
+  --bark: #5C4A38; --bark-light: #8A7060; --bark-faint: #E8E0D6;
+  --terracotta: #C4714A; --terracotta-light: #E09B78; --terracotta-faint: #FAF0EA;
+  --sky: #5B8FA8; --sky-faint: #EDF4F8;
+  --radius: 16px; --radius-sm: 10px;
+  --font-display: 'Lora', serif; --font-body: 'DM Sans', sans-serif;
+}
+body { font-family: var(--font-body); background: var(--cream); color: var(--bark); min-height: 100vh; max-width: 430px; margin: 0 auto; }
+
+.header { padding: 52px 24px 18px; background: var(--warm-white); border-bottom: 1px solid var(--bark-faint); }
+.header-top { display: flex; align-items: flex-start; justify-content: space-between; }
+.app-name { font-family: var(--font-display); font-size: 26px; font-weight: 400; color: var(--bark); letter-spacing: -0.3px; }
+.app-name em { color: var(--terracotta); font-style: italic; }
+.header-date { font-size: 13px; color: var(--bark-light); font-weight: 300; margin-top: 4px; }
+.avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--terracotta-faint); border: 1.5px solid var(--terracotta-light); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; color: var(--terracotta); }
+
+.summary-strip { background: var(--warm-white); padding: 14px 24px 18px; border-bottom: 1px solid var(--bark-faint); }
+.summary-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--bark-light); font-weight: 500; margin-bottom: 10px; }
+.summary-dots { display: flex; gap: 4px; flex-wrap: wrap; }
+.dot-group { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; min-width: 34px; }
+.dot-row { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bark-faint); transition: background 0.3s; }
+.dot.filled { background: var(--group-color); }
+.dot-label { font-size: 9px; color: var(--bark-light); text-align: center; white-space: nowrap; }
+
+.scroll-area { padding: 18px 16px 130px; }
+.section-title { font-family: var(--font-display); font-size: 17px; font-weight: 400; color: var(--bark); margin-bottom: 12px; padding-left: 4px; }
+
+.group-card { background: var(--warm-white); border-radius: var(--radius); border: 1px solid var(--bark-faint); margin-bottom: 10px; overflow: hidden; }
+.group-header { display: flex; align-items: center; padding: 13px 16px; gap: 12px; cursor: pointer; }
+.group-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
+.group-info { flex: 1; min-width: 0; }
+.group-name { font-size: 15px; font-weight: 500; color: var(--bark); margin-bottom: 6px; }
+.portion-track { display: flex; gap: 4px; align-items: center; }
+.portion-pip { height: 6px; border-radius: 3px; transition: background 0.3s; }
+.group-count { font-size: 12px; color: var(--bark-light); white-space: nowrap; margin-left: 6px; }
+.group-chevron { color: var(--bark-light); font-size: 20px; line-height: 1; transition: transform 0.25s; }
+
+.group-log { display: none; border-top: 1px solid var(--bark-faint); background: var(--cream); }
+.group-log.open { display: block; }
+.log-entries { padding: 6px 16px; }
+.log-entry { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--bark-faint); }
+.log-entry:last-child { border-bottom: none; }
+.log-entry-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.log-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.log-entry-name { font-size: 14px; color: var(--bark); }
+.log-entry-meta { font-size: 12px; color: var(--bark-light); margin-top: 1px; }
+.log-entry-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.log-portion-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+.dual-badge { font-size: 10px; padding: 2px 6px; border-radius: 20px; white-space: nowrap; }
+.log-entry-remove { background: none; border: none; color: var(--bark-light); cursor: pointer; font-size: 18px; padding: 2px 4px; border-radius: 6px; line-height: 1; }
+.log-entry-remove:active { color: var(--terracotta); }
+.empty-log { padding: 12px 0; font-size: 13px; color: var(--bark-light); }
+
+.water-card { background: var(--warm-white); border-radius: var(--radius); border: 1px solid var(--bark-faint); padding: 13px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; }
+.water-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--sky-faint); display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
+.water-name { font-size: 15px; font-weight: 500; color: var(--bark); margin-bottom: 6px; }
+.water-glasses { display: flex; gap: 4px; align-items: center; }
+.glass-btn { width: 26px; height: 26px; border-radius: 7px; border: 1.5px solid var(--bark-faint); background: var(--cream); font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; color: var(--bark-faint); }
+.glass-btn.filled { background: var(--sky-faint); border-color: var(--sky); color: var(--sky); }
+.water-count { font-size: 12px; color: var(--bark-light); margin-left: 6px; }
+
+.fab { position: fixed; bottom: 84px; right: calc(50% - 215px + 16px); width: 56px; height: 56px; border-radius: 50%; background: var(--bark); color: var(--warm-white); border: none; font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 12px rgba(92,74,56,0.22); transition: background 0.2s, transform 0.15s; z-index: 90; line-height: 1; }
+.fab:active { transform: scale(0.94); }
+
+.bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: var(--warm-white); border-top: 1px solid var(--bark-faint); display: flex; padding: 10px 0 26px; z-index: 80; }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; color: var(--bark-light); font-size: 10px; text-align: center; padding: 2px 0; }
+.nav-item.active { color: var(--terracotta); }
+.nav-icon { font-size: 20px; }
+
+.sheet-backdrop { display: none; position: fixed; inset: 0; background: rgba(92,74,56,0.18); z-index: 200; }
+.sheet-backdrop.open { display: block; }
+.sheet { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: var(--warm-white); border-radius: 20px 20px 0 0; z-index: 210; max-height: 82vh; display: none; flex-direction: column; }
+.sheet.open { display: flex; animation: slideUp 0.28s cubic-bezier(0.32,0.72,0,1); }
+@keyframes slideUp { from { transform: translateX(-50%) translateY(100%); } to { transform: translateX(-50%) translateY(0); } }
+.sheet-handle { width: 36px; height: 4px; background: var(--bark-faint); border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
+.sheet-title { font-family: var(--font-display); font-size: 18px; font-weight: 400; color: var(--bark); padding: 14px 20px 12px; flex-shrink: 0; }
+.search-wrap { padding: 0 16px 12px; flex-shrink: 0; position: relative; }
+.search-input { width: 100%; padding: 11px 16px 11px 40px; border-radius: 12px; border: 1.5px solid var(--bark-faint); background: var(--cream); font-family: var(--font-body); font-size: 15px; color: var(--bark); outline: none; transition: border-color 0.2s; }
+.search-input::placeholder { color: var(--bark-light); }
+.search-input:focus { border-color: var(--bark-light); }
+.search-icon { position: absolute; left: 28px; top: 50%; transform: translateY(-50%); font-size: 16px; color: var(--bark-light); pointer-events: none; }
+.cat-filters { display: flex; gap: 6px; padding: 0 16px 12px; overflow-x: auto; flex-shrink: 0; scrollbar-width: none; }
+.cat-filters::-webkit-scrollbar { display: none; }
+.cat-pill { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--bark-faint); background: transparent; font-family: var(--font-body); font-size: 12px; color: var(--bark-light); cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.search-results { overflow-y: auto; flex: 1; padding: 0 16px 24px; }
+.result-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; cursor: pointer; transition: background 0.15s; margin-bottom: 2px; }
+.result-item:active { background: var(--cream); }
+.result-emoji { font-size: 22px; width: 36px; text-align: center; flex-shrink: 0; }
+.result-info { flex: 1; min-width: 0; }
+.result-name { font-size: 15px; color: var(--bark); }
+.result-sub { font-size: 11px; color: var(--bark-light); margin-top: 2px; }
+.result-tags { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+.result-tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+.result-add-btn { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--bark-faint); background: transparent; font-size: 20px; color: var(--bark-light); cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0; }
+.result-add-btn:active { background: var(--bark); color: var(--warm-white); border-color: var(--bark); }
+.no-results { padding: 24px 0; text-align: center; color: var(--bark-light); font-size: 14px; }
+
+/* Quantity sheet */
+.qty-sheet { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: var(--warm-white); border-radius: 20px 20px 0 0; z-index: 220; display: none; flex-direction: column; padding-bottom: 32px; }
+.qty-sheet.open { display: flex; animation: slideUp 0.24s cubic-bezier(0.32,0.72,0,1); }
+.qty-food-row { display: flex; align-items: center; gap: 12px; padding: 20px 20px 6px; }
+.qty-food-emoji { font-size: 26px; }
+.qty-food-name { font-size: 17px; font-weight: 500; color: var(--bark); }
+.qty-food-group { font-size: 12px; color: var(--bark-light); margin-top: 3px; display: flex; gap: 5px; flex-wrap: wrap; }
+.qty-dual-note { margin: 0 20px 14px; padding: 10px 14px; background: #FBF5E6; border-radius: 10px; border-left: 3px solid #C49A3C; font-size: 12px; color: #633806; line-height: 1.5; }
+.qty-body { padding: 0 20px; }
+.qty-label { font-size: 13px; color: var(--bark-light); margin-bottom: 8px; }
+.qty-unit-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.qty-unit-btn { flex: 1; min-width: 60px; padding: 9px 0; border-radius: 10px; border: 1.5px solid var(--bark-faint); background: transparent; font-family: var(--font-body); font-size: 13px; color: var(--bark-light); cursor: pointer; transition: all 0.15s; }
+.qty-unit-btn.active { border-color: var(--bark); background: var(--bark); color: var(--warm-white); }
+.qty-input-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.qty-input { flex: 1; padding: 13px 16px; border-radius: 12px; border: 1.5px solid var(--bark-faint); background: var(--cream); font-family: var(--font-body); font-size: 22px; font-weight: 500; color: var(--bark); outline: none; text-align: center; transition: border-color 0.2s; }
+.qty-input:focus { border-color: var(--bark-light); }
+.qty-unit-label { font-size: 16px; color: var(--bark-light); min-width: 44px; }
+.qty-portion-ref { font-size: 12px; color: var(--bark-light); margin-bottom: 6px; padding: 7px 12px; background: var(--cream); border-radius: 8px; line-height: 1.5; }
+.qty-portion-hint { font-size: 14px; color: var(--bark-light); text-align: center; margin-bottom: 18px; min-height: 22px; }
+.qty-portion-hint strong { color: var(--bark); }
+.qty-confirm-btn { margin: 0 20px; padding: 15px; border-radius: 14px; border: none; font-family: var(--font-body); font-size: 16px; font-weight: 500; color: var(--warm-white); cursor: pointer; transition: opacity 0.15s; }
+.qty-confirm-btn:active { opacity: 0.85; }
+.qty-cancel { text-align: center; margin-top: 12px; font-size: 14px; color: var(--bark-light); cursor: pointer; padding: 4px; }
+
+.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--bark); color: var(--cream); font-size: 13px; padding: 10px 20px; border-radius: 40px; opacity: 0; transition: all 0.25s; pointer-events: none; white-space: nowrap; z-index: 300; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.day-note { background: var(--terracotta-faint); border-radius: var(--radius); padding: 13px 18px; margin-bottom: 16px; border-left: 3px solid var(--terracotta-light); }
+.day-note p { font-family: var(--font-display); font-style: italic; font-size: 14px; color: var(--terracotta); line-height: 1.55; }
+
+/* ── Screens ── */
+.screen { display: block; }
+.activity-card { background: var(--warm-white); border-radius: var(--radius); border: 1px solid var(--bark-faint); padding: 13px 16px; margin-bottom: 10px; }
+
+/* ── Settings ── */
+.conn-card { background: var(--warm-white); border-radius: var(--radius); border: 1px solid var(--bark-faint); padding: 16px; margin-bottom: 10px; }
+.conn-row { display: flex; align-items: center; gap: 12px; }
+.conn-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
+.conn-btn { padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--bark-faint); background: transparent; font-family: var(--font-body); font-size: 12px; color: var(--bark-light); cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+.conn-btn.connected { border-color: var(--terracotta-light); background: var(--terracotta-faint); color: var(--terracotta); }
+.notice-pill { display: inline-flex; align-items: center; font-size: 11px; padding: 4px 10px; border-radius: 20px; background: var(--bark-faint); color: var(--bark-light); white-space: nowrap; }
+.setup-box { background: var(--cream); border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
+.setup-box p { font-size: 12px; color: var(--bark-light); line-height: 1.6; margin-bottom: 6px; }
+.setup-box a { color: var(--sky); }
+.setup-input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid var(--bark-faint); background: var(--warm-white); font-family: var(--font-body); font-size: 14px; color: var(--bark); outline: none; margin: 6px 0 10px; display: block; box-sizing: border-box; }
+.setup-input:focus { border-color: var(--bark-light); }
+.setup-save-btn { padding: 9px 20px; border-radius: 20px; border: none; background: var(--bark); color: var(--warm-white); font-family: var(--font-body); font-size: 13px; cursor: pointer; }
+.settings-title { font-family: var(--font-display); font-size: 17px; font-weight: 400; color: var(--bark); margin: 20px 0 12px; padding-left: 4px; }
+.goal-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--warm-white); border-radius: var(--radius-sm); border: 1px solid var(--bark-faint); margin-bottom: 8px; }
+.stepper { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.stepper-btn { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--bark-faint); background: transparent; font-size: 18px; color: var(--bark-light); cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; font-family: var(--font-body); }
+.stepper-val { font-size: 15px; font-weight: 500; color: var(--bark); min-width: 20px; text-align: center; }
+
+/* ── Check-in chip ── */
+.checkin-chip { display: flex; align-items: center; gap: 10px; background: var(--warm-white); border-radius: 40px; border: 1px solid var(--bark-faint); padding: 8px 14px 8px 10px; margin-bottom: 14px; cursor: pointer; transition: border-color 0.2s; }
+.checkin-chip:active { border-color: var(--bark-light); }
+.checkin-chip-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--terracotta); flex-shrink: 0; }
+.checkin-chip-text { font-size: 13px; color: var(--bark); flex: 1; }
+.checkin-chip-arrow { font-size: 16px; color: var(--bark-light); }
+
+/* ── Check-in sheet ── */
+.checkin-sheet { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: var(--warm-white); border-radius: 20px 20px 0 0; z-index: 220; display: none; flex-direction: column; padding-bottom: 32px; }
+.checkin-sheet.open { display: flex; animation: slideUp 0.24s cubic-bezier(0.32,0.72,0,1); }
+.checkin-row { display: flex; align-items: center; gap: 10px; padding: 10px 20px; }
+.checkin-label { font-size: 14px; color: var(--bark); width: 70px; flex-shrink: 0; }
+.checkin-pips { display: flex; gap: 6px; }
+.checkin-pip { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--bark-faint); background: transparent; cursor: pointer; font-size: 13px; font-weight: 500; font-family: var(--font-body); color: var(--bark-light); transition: all 0.15s; }
+.checkin-pip.on { background: var(--bark); border-color: var(--bark); color: var(--warm-white); }
+.checkin-submit { margin: 8px 20px 0; padding: 15px; border-radius: 14px; border: none; background: var(--bark); color: var(--warm-white); font-family: var(--font-body); font-size: 16px; font-weight: 500; cursor: pointer; }
+.checkin-skip { text-align: center; margin-top: 12px; font-size: 14px; color: var(--bark-light); cursor: pointer; padding: 4px; }
+
+/* ── Period tabs ── */
+.period-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+.period-tab { flex: 1; padding: 8px; border-radius: 10px; border: 1.5px solid var(--bark-faint); background: transparent; font-family: var(--font-body); font-size: 13px; color: var(--bark-light); cursor: pointer; transition: all 0.15s; }
+.period-tab.active { background: var(--bark); border-color: var(--bark); color: var(--warm-white); }
+
+/* ── Progress ── */
+.prog-card { background: var(--warm-white); border-radius: var(--radius); border: 1px solid var(--bark-faint); padding: 16px; margin-bottom: 10px; }
+.prog-card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--bark-light); font-weight: 500; margin-bottom: 12px; }
+.prog-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--bark-faint); }
+.prog-row:last-child { border-bottom: none; }
+.prog-bar-wrap { flex: 1; height: 6px; background: var(--bark-faint); border-radius: 3px; overflow: hidden; }
+.prog-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+.prog-val { font-size: 12px; color: var(--bark-light); width: 44px; text-align: right; white-space: nowrap; }
+.prog-dots { display: flex; gap: 3px; }
+.prog-dot { width: 9px; height: 9px; border-radius: 50%; }
+
+/* ── Group grid ── */
+.group-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.group-tile { background: var(--warm-white); border-radius: var(--radius); border: 1.5px solid var(--bark-faint); padding: 14px 12px 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; text-align: center; transition: border-color 0.2s; -webkit-tap-highlight-color: transparent; }
+.group-tile.done { border-color: var(--tile-color); }
+.tile-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 8px; flex-shrink: 0; }
+.tile-pips { display: flex; gap: 4px; justify-content: center; margin-bottom: 5px; flex-wrap: wrap; }
+.tile-pip { width: 7px; height: 7px; border-radius: 50%; }
+.tile-count { font-size: 11px; }
+
+/* ── Group detail sheet ── */
+.detail-sheet { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: var(--warm-white); border-radius: 20px 20px 0 0; z-index: 220; display: none; flex-direction: column; max-height: 72vh; }
+.detail-sheet.open { display: flex; animation: slideUp 0.26s cubic-bezier(0.32,0.72,0,1); }
+.detail-header { padding: 14px 16px 12px; border-bottom: 1px solid var(--bark-faint); flex-shrink: 0; }
+
+/* ── Bottom widgets ── */
+.bottom-widgets { display: flex; gap: 8px; margin-bottom: 10px; }
+.mini-widget { flex: 1; background: var(--warm-white); border-radius: var(--radius); border: 1px solid var(--bark-faint); padding: 12px 14px; min-width: 0; }
+.mini-widget-title { font-size: 12px; font-weight: 500; color: var(--bark); margin-bottom: 8px; }
+.mini-glass { width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid var(--bark-faint); background: var(--cream); cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--bark-faint); }
+.mini-glass.filled { background: var(--sky-faint); border-color: var(--sky); color: var(--sky); }
+
+/* ── Insights ── */
+.insight-card { background: var(--warm-white); border-radius: var(--radius); border: 1px solid var(--bark-faint); padding: 16px; margin-bottom: 10px; display: flex; gap: 12px; }
+.insight-icon { font-size: 22px; flex-shrink: 0; }
+.insight-title { font-size: 14px; font-weight: 500; color: var(--bark); margin-bottom: 5px; line-height: 1.3; }
+.insight-body { font-size: 13px; color: var(--bark-light); line-height: 1.65; }
+.insight-tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 20px; margin-top: 7px; }
+.supp-box { background: var(--cream); border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 12px; color: var(--bark-light); line-height: 1.65; }
+.supp-box strong { color: var(--bark); display: block; margin-bottom: 3px; }
+.insights-empty { text-align: center; padding: 40px 16px; font-size: 14px; color: var(--bark-light); line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="app-name">n<em>o</em>urish</div>
+      <div class="header-date" id="header-date"></div>
+    </div>
+    <div class="avatar">S</div>
+  </div>
+</div>
+
+
+<!-- ── Today screen ── -->
+<div id="screen-today" style="padding:18px 16px 130px;">
+  <!-- Morning check-in chip -->
+  <div class="checkin-chip" id="checkin-chip" style="display:none;" onclick="openCheckin()">
+    <div class="checkin-chip-dot"></div>
+    <span class="checkin-chip-text" id="checkin-chip-text">How are you feeling today?</span>
+    <span class="checkin-chip-arrow">›</span>
+  </div>
+  <!-- 2×4 group grid -->
+  <div class="group-grid" id="group-grid"></div>
+
+  <!-- Water + Activity row -->
+  <div class="bottom-widgets">
+    <div class="mini-widget">
+      <div class="mini-widget-title">💧 Water</div>
+      <div id="water-glasses" style="display:flex;gap:3px;flex-wrap:wrap;"></div>
+      <div id="water-count" style="font-size:11px;color:var(--bark-light);margin-top:5px;"></div>
+    </div>
+    <div class="mini-widget" id="activity-card"></div>
+  </div>
+</div>
+
+<!-- ── Progress screen ── -->
+<div id="screen-progress" style="display:none; padding:18px 16px 130px;">
+  <div class="period-tabs">
+    <button class="period-tab active" id="tab-week" onclick="setPeriod('week')">This week</button>
+    <button class="period-tab" id="tab-month" onclick="setPeriod('month')">This month</button>
+  </div>
+
+  <div class="section-title" style="margin-top:0;">Food goals</div>
+  <div class="prog-card" id="prog-food"></div>
+
+  <div class="section-title">How you felt</div>
+  <div class="prog-card" id="prog-checkins">
+    <div style="font-size:13px;color:var(--bark-light);">No check-ins logged yet — fill in the daily prompt on the Today tab.</div>
+  </div>
+
+  <div class="section-title">Activity</div>
+  <div class="prog-card" id="prog-activity">
+    <div style="font-size:13px;color:var(--bark-light);" id="prog-activity-body">Connect Strava in Settings to see activity here.</div>
+  </div>
+</div>
+
+<!-- ── Insights screen ── -->
+<div id="screen-insights" style="display:none; padding:18px 16px 130px;">
+  <div class="section-title" style="margin-top:0;">Your patterns</div>
+  <div style="font-size:12px;color:var(--bark-light);margin:-8px 0 14px 4px;" id="insights-period-label">Based on the last 7 days</div>
+  <div id="insights-list"></div>
+</div>
+
+<!-- ── Settings screen ── -->
+<div id="screen-settings" style="display:none; padding:18px 16px 130px;">
+
+  <div class="settings-title" style="margin-top:0;">Connected apps</div>
+
+  <!-- Strava -->
+  <div class="conn-card">
+    <div class="conn-row">
+      <div class="conn-icon" style="background:#FEF0E6;">🏃</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:15px;font-weight:500;color:var(--bark);">Strava</div>
+        <div style="font-size:12px;color:var(--bark-light);" id="strava-status-text">Not connected</div>
+      </div>
+      <button class="conn-btn" id="strava-conn-btn" onclick="handleStravaBtn()">Connect</button>
+    </div>
+    <div class="setup-box" id="strava-setup-box" style="display:none;">
+      <p>Go to <a href="https://www.strava.com/settings/api" target="_blank">strava.com/settings/api</a> and make sure the <strong>Authorization Callback Domain</strong> is set to <span id="strava-domain-hint" style="font-family:monospace;background:var(--bark-faint);padding:1px 5px;border-radius:4px;"></span></p>
+      <label style="font-size:12px;color:var(--bark-light);">Client ID</label>
+      <input class="setup-input" id="strava-client-id-input" type="text" placeholder="e.g. 123456" />
+      <label style="font-size:12px;color:var(--bark-light);">Client Secret</label>
+      <input class="setup-input" id="strava-client-secret-input" type="password" placeholder="from strava.com/settings/api" />
+      <button class="setup-save-btn" onclick="saveStravaClientId()">Save &amp; Connect →</button>
+    </div>
+  </div>
+
+  <!-- Apple Health -->
+  <div class="conn-card">
+    <div class="conn-row">
+      <div class="conn-icon" style="background:#FFE9EC;">❤️</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:15px;font-weight:500;color:var(--bark);">Apple Health</div>
+        <div style="font-size:12px;color:var(--bark-light);">Steps, workouts, sleep</div>
+      </div>
+      <span class="notice-pill">iOS app</span>
+    </div>
+    <div style="font-size:12px;color:var(--bark-light);margin-top:12px;line-height:1.6;">Apple Health (HealthKit) is only available to native iOS apps — it cannot be accessed from a browser. When nourish ships on iOS, this will sync automatically with no setup needed.</div>
+  </div>
+
+  <!-- Garmin -->
+  <div class="conn-card">
+    <div class="conn-row">
+      <div class="conn-icon" style="background:#E8EFF8;">⌚</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:15px;font-weight:500;color:var(--bark);">Garmin Connect</div>
+        <div style="font-size:12px;color:var(--bark-light);">Activities &amp; daily stats</div>
+      </div>
+      <span class="notice-pill">Coming soon</span>
+    </div>
+    <div style="font-size:12px;color:var(--bark-light);margin-top:12px;line-height:1.6;">Garmin's API requires a secure server to handle authentication. This will be available once nourish has a backend — planned for the next milestone.</div>
+  </div>
+
+  <div class="settings-title">Daily portion goals</div>
+  <div id="goals-settings"></div>
+
+</div>
+
+<button class="fab" onclick="openSearch()" aria-label="Add food">+</button>
+
+
+<div class="bottom-nav">
+  <div class="nav-item active" id="nav-today" onclick="showScreen('today')"><span class="nav-icon">🌿</span><span>Today</span></div>
+  <div class="nav-item" id="nav-progress" onclick="showScreen('progress')"><span class="nav-icon">📊</span><span>Progress</span></div>
+  <div class="nav-item" id="nav-insights" onclick="showScreen('insights')"><span class="nav-icon">💡</span><span>Insights</span></div>
+  <div class="nav-item" id="nav-settings" onclick="showScreen('settings')"><span class="nav-icon">⚙️</span><span>Settings</span></div>
+</div>
+
+<div class="sheet-backdrop" id="backdrop" onclick="closeAll()"></div>
+
+<div class="sheet" id="search-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">What did you eat?</div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="search-input" type="text" placeholder="Search foods…" autocomplete="off" oninput="onSearch()" />
+  </div>
+  <div class="cat-filters" id="cat-filters"></div>
+  <div class="search-results" id="search-results"></div>
+</div>
+
+<div class="qty-sheet" id="qty-sheet">
+  <div class="sheet-handle"></div>
+  <div class="qty-food-row">
+    <div class="qty-food-emoji" id="qty-emoji"></div>
+    <div style="flex:1">
+      <div class="qty-food-name" id="qty-name"></div>
+      <div class="qty-food-group" id="qty-group-label"></div>
+    </div>
+  </div>
+  <div class="qty-dual-note" id="qty-dual-note" style="display:none"></div>
+  <div class="qty-body">
+    <div class="qty-label">How much?</div>
+    <div class="qty-unit-row" id="qty-unit-row"></div>
+    <div class="qty-input-row">
+      <input class="qty-input" id="qty-input" type="number" min="0" step="any" oninput="updateHint()" />
+      <span class="qty-unit-label" id="qty-unit-display"></span>
+    </div>
+    <div class="qty-portion-ref" id="qty-portion-ref"></div>
+    <div class="qty-portion-hint" id="qty-hint"></div>
+  </div>
+  <button class="qty-confirm-btn" id="qty-confirm-btn" onclick="confirmLog()">Log it</button>
+  <div class="qty-cancel" onclick="closeQty()">Cancel</div>
+</div>
+
+<div class="checkin-sheet" id="checkin-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding: 16px 20px 8px;">
+    <div style="font-family:var(--font-display);font-size:18px;color:var(--bark);" id="checkin-greeting">Good morning 🌅</div>
+    <div style="font-size:13px;color:var(--bark-light);margin-top:3px;">Quick check-in — how are you feeling?</div>
+  </div>
+  <div class="checkin-row">
+    <span class="checkin-label">😴 Sleep</span>
+    <div class="checkin-pips" id="pip-sleep"></div>
+  </div>
+  <div class="checkin-row">
+    <span class="checkin-label">⚡ Energy</span>
+    <div class="checkin-pips" id="pip-energy"></div>
+  </div>
+  <div class="checkin-row">
+    <span class="checkin-label">☀️ Mood</span>
+    <div class="checkin-pips" id="pip-mood"></div>
+  </div>
+  <button class="checkin-submit" onclick="submitCheckin()">Log it</button>
+  <div class="checkin-skip" onclick="skipCheckin()">Skip today</div>
+</div>
+
+<!-- ── Group detail sheet ── -->
+<div class="detail-sheet" id="group-detail-sheet">
+  <div style="display:flex;justify-content:center;padding:10px 0 0;">
+    <div style="width:36px;height:4px;border-radius:2px;background:var(--bark-faint);"></div>
+  </div>
+  <div class="detail-header">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div id="detail-group-emoji" style="width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;"></div>
+      <div>
+        <div id="detail-group-name" style="font-size:17px;font-weight:600;color:var(--bark);"></div>
+        <div id="detail-progress" style="font-size:12px;color:var(--bark-light);margin-top:2px;"></div>
+      </div>
+      <button onclick="closeGroupDetail()" style="margin-left:auto;background:none;border:none;color:var(--bark-light);font-size:22px;cursor:pointer;padding:4px 8px;line-height:1;">×</button>
+    </div>
+  </div>
+  <div id="detail-entries" style="overflow-y:auto;flex:1;padding:4px 16px 8px;"></div>
+  <div style="padding:0 16px 28px;">
+    <button id="detail-add-btn" onclick="addToGroup()" style="width:100%;padding:15px;border-radius:14px;border:none;font-family:var(--font-body);font-size:15px;font-weight:500;color:var(--warm-white);cursor:pointer;"></button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const groups = [
+  { id:'protein-animal', name:'Animal protein', short:'protein', emoji:'🥩', goal:3, color:'#C4714A', faint:'#FAF0EA', tagText:'#712B13' },
+  { id:'protein-veg',    name:'Plant protein',  short:'plant',   emoji:'🫘', goal:2, color:'#7A9E7E', faint:'#EBF2EC', tagText:'#085041' },
+  { id:'dairy',          name:'Dairy',          short:'dairy',   emoji:'🧀', goal:2, color:'#C49A3C', faint:'#FBF5E6', tagText:'#633806' },
+  { id:'fats',           name:'Fats',   short:'fats',    emoji:'🥑', goal:2, color:'#8B5E83', faint:'#F5EEF4', tagText:'#3C3489' },
+  { id:'vegetables',     name:'Vegetables',     short:'veggies', emoji:'🥦', goal:4, color:'#5B8FA8', faint:'#EDF4F8', tagText:'#0C447C' },
+  { id:'fruit',          name:'Fruit',          short:'fruit',   emoji:'🍓', goal:2, color:'#D4537E', faint:'#FBEAF0', tagText:'#72243E' },
+  { id:'carbs',          name:'Carbs',          short:'carbs',   emoji:'🌾', goal:3, color:'#BA7517', faint:'#FAEEDA', tagText:'#633806' },
+  { id:'sweets',         name:'Sweets',         short:'sweets',  emoji:'🍫', goal:1, color:'#888780', faint:'#F1EFE8', tagText:'#444441' },
+];
+
+// portions: array of { group, portionSize }
+// When a food spans two groups (e.g. salmon = protein + fat), it has two entries.
+// source: reference for the portion size.
+const allFoods = [
+// Nutrition (n) per 100g cooked. Source: USDA FoodData Central (fdc.nal.usda.gov).
+// gPerUnit / gPerTbsp = grams of 1 countable unit, used by calcNutrition().
+// These values accumulate in log entries but are NEVER shown in the UI.
+
+  // ── LEAN animal proteins ─────────────────────────────────────────────
+  { name:'Chicken breast',       emoji:'🍗', unit:'g',    unitLabel:'g',                   portionSize:120, altUnits:[],
+    portions:[{group:'protein-animal', size:120}], source:'Lean protein: 120g cooked = 1 portion',
+    n:{kcal:165, protein:31,  fat:3.6,  carbs:0  } },
+
+  { name:'Turkey breast',        emoji:'🦃', unit:'g',    unitLabel:'g',                   portionSize:120, altUnits:[],
+    portions:[{group:'protein-animal', size:120}], source:'Lean protein: 120g cooked = 1 portion',
+    n:{kcal:135, protein:30,  fat:1,    carbs:0  } },
+
+  { name:'Shrimp',               emoji:'🍤', unit:'g',    unitLabel:'g',                   portionSize:120, altUnits:[],
+    portions:[{group:'protein-animal', size:120}], source:'Lean protein: 120g cooked = 1 portion',
+    n:{kcal:99,  protein:24,  fat:0.3,  carbs:0.2} },
+
+  { name:'Tuna (canned, water)', emoji:'🐟', unit:'g',    unitLabel:'g',                   portionSize:120, altUnits:[],
+    portions:[{group:'protein-animal', size:120}], source:'Lean protein: 120g = 1 portion',
+    n:{kcal:109, protein:25,  fat:0.5,  carbs:0  } },
+
+  { name:'Cod',                  emoji:'🐠', unit:'g',    unitLabel:'g',                   portionSize:120, altUnits:[],
+    portions:[{group:'protein-animal', size:120}], source:'Lean fish: 120g = 1 portion',
+    n:{kcal:105, protein:23,  fat:0.9,  carbs:0  } },
+
+  { name:'Haddock',              emoji:'🐠', unit:'g',    unitLabel:'g',                   portionSize:120, altUnits:[],
+    portions:[{group:'protein-animal', size:120}], source:'Lean fish: 120g = 1 portion',
+    n:{kcal:112, protein:24,  fat:0.9,  carbs:0  } },
+
+  { name:'Tilapia',              emoji:'🐠', unit:'g',    unitLabel:'g',                   portionSize:120, altUnits:[],
+    portions:[{group:'protein-animal', size:120}], source:'Lean fish: 120g = 1 portion',
+    n:{kcal:128, protein:26,  fat:2.7,  carbs:0  } },
+
+  { name:'Eggs',                 emoji:'🥚', unit:'unit', unitLabel:'eggs',                portionSize:2,   altUnits:[], gPerUnit:50,
+    portions:[{group:'protein-animal', size:2}],   source:'2 eggs = 1 protein portion',
+    n:{kcal:143, protein:13,  fat:9.5,  carbs:0.7} },
+
+  { name:'Greek yogurt',         emoji:'🥛', unit:'g',    unitLabel:'g',                   portionSize:170, altUnits:['cup'],
+    portions:[{group:'protein-animal', size:170}], source:'3/4 cup (170g) = 1 lean protein portion',
+    n:{kcal:59,  protein:10,  fat:0.4,  carbs:3.6} },
+
+  { name:'Cottage cheese',       emoji:'🥛', unit:'g',    unitLabel:'g',                   portionSize:113, altUnits:['cup'],
+    portions:[{group:'protein-animal', size:113}], source:'1/2 cup (113g) = 1 protein portion',
+    n:{kcal:98,  protein:11,  fat:4.3,  carbs:3.4} },
+
+  // ── FATTY animal proteins (protein + fat) ───────────────────────────
+  { name:'Salmon',               emoji:'🐟', unit:'g',    unitLabel:'g',                   portionSize:100, altUnits:[],
+    portions:[{group:'protein-animal', size:100},{group:'fats', size:100}], source:'Fatty fish: 100g = 1 protein + 1 fat portion',
+    n:{kcal:208, protein:20,  fat:13,   carbs:0  } },
+
+  { name:'Sardines',             emoji:'🐟', unit:'g',    unitLabel:'g',                   portionSize:100, altUnits:[],
+    portions:[{group:'protein-animal', size:100},{group:'fats', size:100}], source:'Fatty fish: 100g = 1 protein + 1 fat portion',
+    n:{kcal:208, protein:25,  fat:11,   carbs:0  } },
+
+  { name:'Mackerel',             emoji:'🐟', unit:'g',    unitLabel:'g',                   portionSize:100, altUnits:[],
+    portions:[{group:'protein-animal', size:100},{group:'fats', size:100}], source:'Fatty fish: 100g = 1 protein + 1 fat portion',
+    n:{kcal:262, protein:19,  fat:20,   carbs:0  } },
+
+  { name:'Trout',                emoji:'🐟', unit:'g',    unitLabel:'g',                   portionSize:100, altUnits:[],
+    portions:[{group:'protein-animal', size:100},{group:'fats', size:100}], source:'Fatty fish: 100g = 1 protein + 1 fat portion',
+    n:{kcal:190, protein:26,  fat:8.5,  carbs:0  } },
+
+  { name:'Herring',              emoji:'🐟', unit:'g',    unitLabel:'g',                   portionSize:100, altUnits:[],
+    portions:[{group:'protein-animal', size:100},{group:'fats', size:100}], source:'Fatty fish: 100g = 1 protein + 1 fat portion',
+    n:{kcal:217, protein:25,  fat:12,   carbs:0  } },
+
+  // ── Plant proteins ───────────────────────────────────────────────────
+  { name:'Lentils',              emoji:'🫘', unit:'g',    unitLabel:'g',                   portionSize:100, altUnits:['cup'],
+    portions:[{group:'protein-veg', size:100}], source:'1/2 cup cooked (100g) = 1 plant protein portion',
+    n:{kcal:116, protein:9,   fat:0.4,  carbs:20 } },
+
+  { name:'Black beans',          emoji:'🫘', unit:'g',    unitLabel:'g',                   portionSize:85,  altUnits:['cup'],
+    portions:[{group:'protein-veg', size:85}],  source:'1/4 cup cooked (85g) = 1 plant protein portion',
+    n:{kcal:132, protein:8.9, fat:0.5,  carbs:24 } },
+
+  { name:'Chickpeas',            emoji:'🫘', unit:'g',    unitLabel:'g',                   portionSize:85,  altUnits:['cup'],
+    portions:[{group:'protein-veg', size:85}],  source:'1/4 cup cooked (85g) = 1 plant protein portion',
+    n:{kcal:164, protein:9,   fat:2.6,  carbs:27 } },
+
+  { name:'Tofu',                 emoji:'🧆', unit:'g',    unitLabel:'g',                   portionSize:85,  altUnits:[],
+    portions:[{group:'protein-veg', size:85}],  source:'3 oz (85g) = 1 plant protein portion',
+    n:{kcal:76,  protein:8,   fat:4.8,  carbs:1.9} },
+
+  { name:'Tempeh',               emoji:'🧆', unit:'g',    unitLabel:'g',                   portionSize:85,  altUnits:[],
+    portions:[{group:'protein-veg', size:85}],  source:'3 oz (85g) = 1 plant protein portion',
+    n:{kcal:193, protein:19,  fat:11,   carbs:9.4} },
+
+  { name:'Edamame',              emoji:'🫛', unit:'g',    unitLabel:'g',                   portionSize:85,  altUnits:['cup'],
+    portions:[{group:'protein-veg', size:85}],  source:'1/2 cup shelled (85g) = 1 plant protein portion',
+    n:{kcal:121, protein:11,  fat:5.2,  carbs:8.9} },
+
+  { name:'Quinoa',               emoji:'🌾', unit:'g',    unitLabel:'g',                   portionSize:80,  altUnits:['cup'],
+    portions:[{group:'protein-veg', size:80}],  source:'1/2 cup cooked (80g) = 1 plant protein portion',
+    n:{kcal:120, protein:4.4, fat:1.9,  carbs:21 } },
+
+  // ── Dairy ────────────────────────────────────────────────────────────
+  { name:'Whole milk',           emoji:'🥛', unit:'ml',   unitLabel:'ml',                  portionSize:240, altUnits:['cup'],
+    portions:[{group:'dairy', size:240}], source:'1 cup (240ml) = 1 dairy portion',
+    n:{kcal:61,  protein:3.2, fat:3.3,  carbs:4.8} },
+
+  { name:'Yogurt',               emoji:'🥛', unit:'g',    unitLabel:'g',                   portionSize:245, altUnits:['cup'],
+    portions:[{group:'dairy', size:245}], source:'1 cup (245g) plain yogurt = 1 dairy portion',
+    n:{kcal:61,  protein:3.5, fat:3.3,  carbs:4.7} },
+
+  { name:'Kefir',                emoji:'🥛', unit:'ml',   unitLabel:'ml',                  portionSize:240, altUnits:['cup'],
+    portions:[{group:'dairy', size:240}], source:'1 cup (240ml) = 1 dairy portion',
+    n:{kcal:52,  protein:3.8, fat:1,    carbs:7.5} },
+
+  { name:'Cheese (hard)',        emoji:'🧀', unit:'g',    unitLabel:'g',                   portionSize:43,  altUnits:[],
+    portions:[{group:'dairy', size:43}],  source:'1.5 oz (43g) hard cheese = 1 dairy portion',
+    n:{kcal:402, protein:25,  fat:33,   carbs:1.3} },
+
+  { name:'Feta',                 emoji:'🧀', unit:'g',    unitLabel:'g',                   portionSize:43,  altUnits:[],
+    portions:[{group:'dairy', size:43}],  source:'1.5 oz (43g) = 1 dairy portion',
+    n:{kcal:264, protein:14,  fat:21,   carbs:4  } },
+
+  { name:'Mozzarella',           emoji:'🧀', unit:'g',    unitLabel:'g',                   portionSize:43,  altUnits:[],
+    portions:[{group:'dairy', size:43}],  source:'1.5 oz (43g) = 1 dairy portion',
+    n:{kcal:280, protein:28,  fat:17,   carbs:3.1} },
+
+  { name:'Ricotta',              emoji:'🥛', unit:'g',    unitLabel:'g',                   portionSize:113, altUnits:['cup'],
+    portions:[{group:'dairy', size:113}], source:'1/2 cup (113g) = 1 dairy portion',
+    n:{kcal:174, protein:11,  fat:13,   carbs:3  } },
+
+  // ── Fats ─────────────────────────────────────────────────────────────
+  { name:'Avocado',              emoji:'🥑', unit:'unit', unitLabel:'avocado',             portionSize:0.5, altUnits:['g'], gPerUnit:150,
+    portions:[{group:'fats', size:0.5}], source:'1/2 avocado (~75g) = 1 fat portion',
+    n:{kcal:160, protein:2,   fat:15,   carbs:9  } },
+
+  { name:'Olive oil',            emoji:'🫒', unit:'tbsp', unitLabel:'tbsp',                portionSize:1,   altUnits:['ml'], gPerTbsp:14,
+    portions:[{group:'fats', size:1}],   source:'1 tablespoon (14g) = 1 fat portion',
+    n:{kcal:884, protein:0,   fat:100,  carbs:0  } },
+
+  { name:'Almonds',              emoji:'🌰', unit:'g',    unitLabel:'g',                   portionSize:14,  altUnits:[],
+    portions:[{group:'fats', size:14}],  source:'1/2 oz (14g) = 1 fat portion',
+    n:{kcal:579, protein:21,  fat:50,   carbs:22 } },
+
+  { name:'Walnuts',              emoji:'🌰', unit:'g',    unitLabel:'g',                   portionSize:14,  altUnits:[],
+    portions:[{group:'fats', size:14}],  source:'1/2 oz (14g) = 1 fat portion',
+    n:{kcal:654, protein:15,  fat:65,   carbs:14 } },
+
+  { name:'Cashews',              emoji:'🌰', unit:'g',    unitLabel:'g',                   portionSize:14,  altUnits:[],
+    portions:[{group:'fats', size:14}],  source:'1/2 oz (14g) = 1 fat portion',
+    n:{kcal:553, protein:18,  fat:44,   carbs:30 } },
+
+  { name:'Peanut butter',        emoji:'🥜', unit:'tbsp', unitLabel:'tbsp',                portionSize:1,   altUnits:['g'], gPerTbsp:16,
+    portions:[{group:'fats', size:1}],   source:'1 tablespoon (16g) = 1 fat portion',
+    n:{kcal:588, protein:25,  fat:50,   carbs:20 } },
+
+  { name:'Chia seeds',           emoji:'🌱', unit:'tbsp', unitLabel:'tbsp',                portionSize:1,   altUnits:['g'], gPerTbsp:10,
+    portions:[{group:'fats', size:1}],   source:'1 tablespoon (~10g) = 1 fat portion',
+    n:{kcal:486, protein:17,  fat:31,   carbs:42 } },
+
+  { name:'Flaxseeds',            emoji:'🌱', unit:'tbsp', unitLabel:'tbsp',                portionSize:1,   altUnits:['g'], gPerTbsp:10,
+    portions:[{group:'fats', size:1}],   source:'1 tablespoon (~10g) = 1 fat portion',
+    n:{kcal:534, protein:18,  fat:42,   carbs:29 } },
+
+  // ── Vegetables ───────────────────────────────────────────────────────
+  { name:'Broccoli',             emoji:'🥦', unit:'g',    unitLabel:'g',                   portionSize:155, altUnits:['cup'],
+    portions:[{group:'vegetables', size:155}], source:'1 cup cooked (155g) = 1 vegetable portion',
+    n:{kcal:35,  protein:2.4, fat:0.4,  carbs:7.2} },
+
+  { name:'Spinach',              emoji:'🥬', unit:'g',    unitLabel:'g',                   portionSize:30,  altUnits:['cup'], free:true,
+    portions:[{group:'vegetables', size:30}],  source:'Leafy greens — log as eaten, no portion counted',
+    n:{kcal:23,  protein:2.9, fat:0.4,  carbs:3.6} },
+
+  { name:'Kale',                 emoji:'🥬', unit:'g',    unitLabel:'g',                   portionSize:30,  altUnits:['cup'], free:true,
+    portions:[{group:'vegetables', size:30}],  source:'Leafy greens — log as eaten, no portion counted',
+    n:{kcal:49,  protein:4.3, fat:0.9,  carbs:9  } },
+
+  { name:'Tomato',               emoji:'🍅', unit:'unit', unitLabel:'medium tomato',       portionSize:1,   altUnits:['g'], gPerUnit:123,
+    portions:[{group:'vegetables', size:1}],   source:'1 medium tomato = 1 vegetable portion',
+    n:{kcal:18,  protein:0.9, fat:0.2,  carbs:3.9} },
+
+  { name:'Carrot',               emoji:'🥕', unit:'unit', unitLabel:'medium carrots',      portionSize:2,   altUnits:['g'], gPerUnit:61,
+    portions:[{group:'vegetables', size:2}],   source:'2 medium carrots = 1 vegetable portion',
+    n:{kcal:41,  protein:0.9, fat:0.2,  carbs:10 } },
+
+  { name:'Bell pepper',          emoji:'🫑', unit:'unit', unitLabel:'pepper',              portionSize:1,   altUnits:['g'], gPerUnit:119,
+    portions:[{group:'vegetables', size:1}],   source:'1 large bell pepper = 1 vegetable portion',
+    n:{kcal:31,  protein:1,   fat:0.3,  carbs:6  } },
+
+  { name:'Cucumber',             emoji:'🥒', unit:'g',    unitLabel:'g',                   portionSize:120, altUnits:['cup'],
+    portions:[{group:'vegetables', size:120}], source:'1 cup sliced (120g) = 1 vegetable portion',
+    n:{kcal:15,  protein:0.7, fat:0.1,  carbs:3.6} },
+
+  { name:'Zucchini',             emoji:'🥒', unit:'g',    unitLabel:'g',                   portionSize:124, altUnits:['cup'],
+    portions:[{group:'vegetables', size:124}], source:'1 cup sliced (124g) = 1 vegetable portion',
+    n:{kcal:17,  protein:1.2, fat:0.3,  carbs:3.1} },
+
+  { name:'Cauliflower',          emoji:'🥦', unit:'g',    unitLabel:'g',                   portionSize:107, altUnits:['cup'],
+    portions:[{group:'vegetables', size:107}], source:'1 cup florets (107g) = 1 vegetable portion',
+    n:{kcal:25,  protein:1.9, fat:0.3,  carbs:5  } },
+
+  { name:'Asparagus',            emoji:'🌿', unit:'g',    unitLabel:'g',                   portionSize:134, altUnits:['cup'],
+    portions:[{group:'vegetables', size:134}], source:'1 cup cooked (134g) = 1 vegetable portion',
+    n:{kcal:20,  protein:2.2, fat:0.2,  carbs:3.7} },
+
+  { name:'Lettuce',              emoji:'🥬', unit:'g',    unitLabel:'g',                   portionSize:50,  altUnits:['cup'], free:true,
+    portions:[{group:'vegetables', size:50}],  source:'Leafy greens — log as eaten, no portion counted',
+    n:{kcal:15,  protein:1.4, fat:0.2,  carbs:2.9} },
+
+  { name:'Celery',               emoji:'🌿', unit:'g',    unitLabel:'g',                   portionSize:101, altUnits:['cup'], free:true,
+    portions:[{group:'vegetables', size:101}], source:'Leafy greens — log as eaten, no portion counted',
+    n:{kcal:14,  protein:0.7, fat:0.2,  carbs:3  } },
+
+  { name:'Fresh herbs',          emoji:'🌿', unit:'g',    unitLabel:'g',                   portionSize:10,  altUnits:[], free:true,
+    portions:[{group:'vegetables', size:10}],  source:'Leafy greens — log as eaten, no portion counted',
+    n:{kcal:40,  protein:3,   fat:0.8,  carbs:6  } },
+
+  { name:'Eggplant',             emoji:'🍆', unit:'g',    unitLabel:'g',                   portionSize:99,  altUnits:['cup'],
+    portions:[{group:'vegetables', size:99}],  source:'1 cup cubed (99g) = 1 vegetable portion',
+    n:{kcal:25,  protein:1,   fat:0.2,  carbs:6  } },
+
+  // ── Fruit ────────────────────────────────────────────────────────────
+  { name:'Apple',                emoji:'🍎', unit:'unit', unitLabel:'medium apple',        portionSize:1,   altUnits:['g'], gPerUnit:182,
+    portions:[{group:'fruit', size:1}], source:'1 medium apple = 1 fruit portion',
+    n:{kcal:52,  protein:0.3, fat:0.2,  carbs:14 } },
+
+  { name:'Banana',               emoji:'🍌', unit:'unit', unitLabel:'medium banana',       portionSize:1,   altUnits:['g'], gPerUnit:118,
+    portions:[{group:'fruit', size:1}], source:'1 medium banana = 1 fruit portion',
+    n:{kcal:89,  protein:1.1, fat:0.3,  carbs:23 } },
+
+  { name:'Orange',               emoji:'🍊', unit:'unit', unitLabel:'medium orange',       portionSize:1,   altUnits:['g'], gPerUnit:131,
+    portions:[{group:'fruit', size:1}], source:'1 medium orange = 1 fruit portion',
+    n:{kcal:47,  protein:0.9, fat:0.1,  carbs:12 } },
+
+  { name:'Pear',                 emoji:'🍐', unit:'unit', unitLabel:'medium pear',         portionSize:1,   altUnits:['g'], gPerUnit:178,
+    portions:[{group:'fruit', size:1}], source:'1 medium pear = 1 fruit portion',
+    n:{kcal:57,  protein:0.4, fat:0.1,  carbs:15 } },
+
+  { name:'Peach',                emoji:'🍑', unit:'unit', unitLabel:'medium peach',        portionSize:1,   altUnits:['g'], gPerUnit:150,
+    portions:[{group:'fruit', size:1}], source:'1 medium peach = 1 fruit portion',
+    n:{kcal:39,  protein:0.9, fat:0.3,  carbs:10 } },
+
+  { name:'Strawberries',         emoji:'🍓', unit:'g',    unitLabel:'g',                   portionSize:152, altUnits:['cup'],
+    portions:[{group:'fruit', size:152}], source:'1 cup whole (152g) = 1 fruit portion',
+    n:{kcal:32,  protein:0.7, fat:0.3,  carbs:7.7} },
+
+  { name:'Blueberries',          emoji:'🫐', unit:'g',    unitLabel:'g',                   portionSize:148, altUnits:['cup'],
+    portions:[{group:'fruit', size:148}], source:'1 cup (148g) = 1 fruit portion',
+    n:{kcal:57,  protein:0.7, fat:0.3,  carbs:14 } },
+
+  { name:'Grapes',               emoji:'🍇', unit:'g',    unitLabel:'g',                   portionSize:151, altUnits:['cup'],
+    portions:[{group:'fruit', size:151}], source:'1 cup (151g) = 1 fruit portion',
+    n:{kcal:69,  protein:0.7, fat:0.2,  carbs:18 } },
+
+  { name:'Mango',                emoji:'🥭', unit:'g',    unitLabel:'g',                   portionSize:165, altUnits:['cup'],
+    portions:[{group:'fruit', size:165}], source:'1 cup pieces (165g) = 1 fruit portion',
+    n:{kcal:60,  protein:0.8, fat:0.4,  carbs:15 } },
+
+  { name:'Pineapple',            emoji:'🍍', unit:'g',    unitLabel:'g',                   portionSize:165, altUnits:['cup'],
+    portions:[{group:'fruit', size:165}], source:'1 cup chunks (165g) = 1 fruit portion',
+    n:{kcal:50,  protein:0.5, fat:0.1,  carbs:13 } },
+
+  // ── Carbs ────────────────────────────────────────────────────────────
+  { name:'Brown rice',           emoji:'🍚', unit:'g',    unitLabel:'g',                   portionSize:60,  altUnits:['cup'],
+    portions:[{group:'carbs', size:60}],  source:'Clinical exchange: 1/3 cup cooked (60g) = 1 carb portion (~15g carbs)',
+    n:{kcal:216, protein:5,   fat:1.8,  carbs:45 } },
+
+  { name:'White rice',           emoji:'🍚', unit:'g',    unitLabel:'g',                   portionSize:60,  altUnits:['cup'],
+    portions:[{group:'carbs', size:60}],  source:'Clinical exchange: 1/3 cup cooked (60g) = 1 carb portion (~15g carbs)',
+    n:{kcal:130, protein:2.7, fat:0.3,  carbs:28 } },
+
+  { name:'Oats',                 emoji:'🌾', unit:'g',    unitLabel:'g',                   portionSize:117, altUnits:['cup'],
+    portions:[{group:'carbs', size:117}], source:'Clinical exchange: 1/2 cup cooked (117g) = 1 carb portion (~15g carbs)',
+    n:{kcal:68,  protein:2.4, fat:1.4,  carbs:12 } },
+
+  { name:'Pasta',                emoji:'🍝', unit:'g',    unitLabel:'g',                   portionSize:65,  altUnits:['cup'],
+    portions:[{group:'carbs', size:65}],  source:'Clinical exchange: 1/3 cup cooked (65g) = 1 carb portion (~15g carbs)',
+    n:{kcal:158, protein:5.8, fat:0.9,  carbs:31 } },
+
+  { name:'Whole grain bread',    emoji:'🍞', unit:'unit', unitLabel:'slice',               portionSize:1,   altUnits:['g'], gPerUnit:28,
+    portions:[{group:'carbs', size:1}],   source:'1 slice (28g) = 1 carb oz-equivalent',
+    n:{kcal:247, protein:13,  fat:3.4,  carbs:41 } },
+
+  { name:'Sweet potato',         emoji:'🍠', unit:'unit', unitLabel:'medium sweet potato', portionSize:1,   altUnits:['g'], gPerUnit:75,
+    portions:[{group:'carbs', size:1}],   source:'Clinical exchange: 1/2 medium sweet potato (75g) = 1 carb portion (~15g carbs)',
+    n:{kcal:86,  protein:1.6, fat:0.1,  carbs:20 } },
+
+  { name:'Potato',               emoji:'🥔', unit:'unit', unitLabel:'medium potato',       portionSize:1,   altUnits:['g'], gPerUnit:75,
+    portions:[{group:'carbs', size:1}],   source:'Clinical exchange: 1/2 medium potato (75g) = 1 carb portion (~15g carbs)',
+    n:{kcal:77,  protein:2,   fat:0.1,  carbs:17 } },
+
+  { name:'Corn tortilla',        emoji:'🫓', unit:'unit', unitLabel:'tortillas (6")',      portionSize:2,   altUnits:['g'], gPerUnit:26,
+    portions:[{group:'carbs', size:2}],   source:'2 corn tortillas (6") = 1 carb portion',
+    n:{kcal:218, protein:5.7, fat:3.1,  carbs:46 } },
+
+  // ── Sweets ───────────────────────────────────────────────────────────
+  { name:'Dark chocolate',       emoji:'🍫', unit:'g',    unitLabel:'g',                   portionSize:30,  altUnits:[],
+    portions:[{group:'sweets', size:30}],  source:'1 oz (30g) = 1 indulgence portion',
+    n:{kcal:546, protein:5,   fat:31,   carbs:60 } },
+
+  { name:'Cookie',               emoji:'🍪', unit:'unit', unitLabel:'cookie',              portionSize:1,   altUnits:[], gPerUnit:30,
+    portions:[{group:'sweets', size:1}],   source:'1 medium cookie = 1 portion',
+    n:{kcal:458, protein:5.5, fat:21,   carbs:63 } },
+
+  { name:'Ice cream',            emoji:'🍦', unit:'g',    unitLabel:'g',                   portionSize:66,  altUnits:['cup'],
+    portions:[{group:'sweets', size:66}],  source:'1/3 cup (66g) = 1 serving',
+    n:{kcal:207, protein:3.5, fat:11,   carbs:24 } },
+];
+
+function toBaseUnit(food, qty, fromUnit) {
+  if (fromUnit === food.unit) return qty;
+  if (fromUnit === 'cup' && food.unit === 'g')  return qty * 240 * 0.85;
+  if (fromUnit === 'cup' && food.unit === 'ml') return qty * 240;
+  if (fromUnit === 'ml'  && food.unit === 'tbsp') return qty / 15;
+  if (fromUnit === 'g'   && food.unit === 'tbsp') return qty / 14;
+  if (fromUnit === 'g'   && food.unit === 'unit') return qty / 100;
+  if (fromUnit === 'unit'&& food.unit === 'g')    return qty * 100;
+  return qty;
+}
+
+function calcPortions(food, qty, unit) {
+  const baseQty = toBaseUnit(food, qty, unit);
+  return baseQty / food.portionSize;
+}
+
+// ── Nutrition calculation (backend only, never shown to user) ────────
+// Converts any quantity+unit to grams, then applies per-100g nutrition data.
+function toGrams(food, qty, unit) {
+  if (unit === 'g' || unit === 'ml') return qty;  // ml ≈ g for liquids here
+  if (unit === food.unit) {
+    if (unit === 'unit')  return qty * (food.gPerUnit  || 100);
+    if (unit === 'tbsp')  return qty * (food.gPerTbsp  || 15);
+    if (unit === 'cup')   return qty * 240;
+    return qty;
+  }
+  if (unit === 'cup')  return qty * 240;
+  if (unit === 'tbsp') return qty * (food.gPerTbsp || 15);
+  if (unit === 'unit') return qty * (food.gPerUnit  || 100);
+  return qty;
+}
+
+function calcNutrition(food, qty, unit) {
+  if (!food.n) return { kcal:0, protein:0, fat:0, carbs:0 };
+  const g = toGrams(food, qty, unit);
+  const factor = g / 100;
+  return {
+    kcal:    Math.round(food.n.kcal    * factor * 10) / 10,
+    protein: Math.round(food.n.protein * factor * 10) / 10,
+    fat:     Math.round(food.n.fat     * factor * 10) / 10,
+    carbs:   Math.round(food.n.carbs   * factor * 10) / 10,
+  };
+}
+
+// Returns daily totals for nutritionist dashboard use.
+// Call dailyTotals() at any time to get the full picture.
+function dailyTotals() {
+  return logEntries.reduce((acc, e) => {
+    const food = getFood(e.name);
+    if (!food) return acc;
+    const n = calcNutrition(food, e.qty, e.unit);
+    acc.kcal    += n.kcal;
+    acc.protein += n.protein;
+    acc.fat     += n.fat;
+    acc.carbs   += n.carbs;
+    return acc;
+  }, { kcal:0, protein:0, fat:0, carbs:0 });
+}
+
+
+function formatP(p) {
+  if (p <= 0) return '0';
+  if (Math.abs(p - Math.round(p)) < 0.05) return String(Math.round(p));
+  return p.toFixed(1);
+}
+
+const state = {
+  logs: {
+    'protein-animal': [{ name:'Chicken breast', qty:120, unit:'g', portions:[{group:'protein-animal', p:1}] }],
+    'protein-veg':    [{ name:'Lentils', qty:100, unit:'g', portions:[{group:'protein-veg', p:1}] }],
+    dairy: [],
+    fats:  [{ name:'Salmon', qty:100, unit:'g', portions:[{group:'protein-animal', p:1},{group:'fats', p:1}] }],
+    vegetables: [{ name:'Spinach', qty:60, unit:'g', portions:[{group:'vegetables', p:2}] }],
+    fruit: [{ name:'Apple', qty:1, unit:'unit', portions:[{group:'fruit', p:1}] }],
+    carbs: [{ name:'Oats', qty:234, unit:'g', portions:[{group:'carbs', p:1}] }],
+    sweets: [],
+  },
+  water: 3, waterGoal: 8,
+};
+
+// For display: salmon appears in both protein-animal and fats logs
+// We store it in all relevant group logs but deduplicate removal
+let logEntries = [];
+// Seed with sample data after allFoods is defined
+function seedLogs() {
+  const seeds = [
+    { name:'Chicken breast', qty:120, unit:'g' },
+    { name:'Lentils',        qty:100, unit:'g' },
+    { name:'Salmon',         qty:100, unit:'g' },
+    { name:'Spinach',         qty:60, unit:'g' },
+    { name:'Apple',            qty:1, unit:'unit' },
+    { name:'Oats',           qty:117, unit:'g' },
+  ];
+  seeds.forEach(s => {
+    const food = getFood(s.name);
+    if (!food) return;
+    const p     = food.free ? 0 : Math.round(calcPortions(food, s.qty, s.unit) * 10) / 10;
+    const portionData = food.portions.map(pd => ({ group: pd.group, p }));
+    const nutrition   = calcNutrition(food, s.qty, s.unit);
+    logEntries.push({
+      id: nextId++,
+      name: s.name,
+      qty: s.qty,
+      unit: s.unit,
+      portionData,
+      nutrition,   // { kcal, protein, fat, carbs } — stored silently, never shown to user
+      free: !!food.free,
+    });
+  });
+}
+let nextId = 7;
+
+function getGroup(id) { return groups.find(g => g.id === id); }
+function getFood(name) { return allFoods.find(f => f.name === name); }
+
+function groupTotal(gid) {
+  return logEntries.reduce((sum, e) => {
+    const pd = e.portionData.find(d => d.group === gid);
+    return sum + (pd ? pd.p : 0);
+  }, 0);
+}
+
+function entriesForGroup(gid) {
+  return logEntries.filter(e => e.portionData.some(d => d.group === gid));
+}
+
+function renderSummary() {}
+
+function renderGroups() {
+  const gc = document.getElementById('groups-container');
+  if (!gc) return;
+  gc.innerHTML = groups.map(g => {
+    const total = groupTotal(g.id);
+    const filled = Math.min(total, g.goal);
+    const over   = Math.max(total - g.goal, 0);
+    const pips = Array.from({length: g.goal}, (_,i) => {
+      const f = Math.min(Math.max(filled - i, 0), 1);
+      return `<div class="portion-pip" style="width:${Math.floor(92/g.goal)}%;max-width:28px;background:${f>0?g.color:'var(--bark-faint)'};opacity:${f>0?1:0.5}"></div>`;
+    }).join('');
+    const overLabel = over > 0.05 ? `<span style="font-size:11px;color:${g.color};margin-left:3px;">+${formatP(over)}</span>` : '';
+
+    const entries = entriesForGroup(g.id);
+    const entriesHtml = entries.length ? entries.map(e => {
+      const food = getFood(e.name);
+      const uLabel = food ? (e.unit === food.unit ? food.unitLabel : e.unit) : e.unit;
+      const pd = e.portionData.find(d => d.group === g.id);
+      const p = pd ? formatP(pd.p) : '?';
+      const word = parseFloat(p) === 1 ? 'portion' : 'portions';
+      const isFree = !!e.free;
+      const isDual = e.portionData.length > 1 && !isFree;
+      return `<div class="log-entry">
+        <div class="log-entry-left">
+          <div class="log-dot" style="background:${g.color}"></div>
+          <div>
+            <div class="log-entry-name">${e.name}</div>
+            <div class="log-entry-meta">${e.qty} ${uLabel}${isDual ? ' · counts across groups' : ''}</div>
+          </div>
+        </div>
+        <div class="log-entry-right">
+          ${!isFree ? `<span class="log-portion-badge" style="background:${g.faint};color:${g.tagText}">${p} ${word}</span>` : ''}
+          <button class="log-entry-remove" onclick="removeEntry(${e.id})">×</button>
+        </div>
+      </div>`;
+    }).join('') : `<div class="empty-log">Nothing logged yet</div>`;
+
+    return `<div class="group-card" id="card-${g.id}">
+      <div class="group-header" onclick="toggleGroup('${g.id}')">
+        <div class="group-icon" style="background:${g.faint}">${g.emoji}</div>
+        <div class="group-info">
+          <div class="group-name">${g.name}</div>
+          <div class="portion-track">${pips}${overLabel}<span class="group-count">${formatP(total)}/${g.goal}</span></div>
+        </div>
+        <div class="group-chevron" id="chev-${g.id}">›</div>
+      </div>
+      <div class="group-log" id="log-${g.id}"><div class="log-entries">${entriesHtml}</div></div>
+    </div>`;
+  }).join('');
+}
+
+function toggleGroup(id) {
+  const log = document.getElementById(`log-${id}`);
+  const chev = document.getElementById(`chev-${id}`);
+  const open = log.classList.contains('open');
+  document.querySelectorAll('.group-log').forEach(el => el.classList.remove('open'));
+  document.querySelectorAll('.group-chevron').forEach(el => { el.style.transform = ''; });
+  if (!open) { log.classList.add('open'); chev.style.transform = 'rotate(90deg)'; }
+}
+
+function removeEntry(id) {
+  const entry = logEntries.find(e => e.id === id);
+  if (!entry) return;
+  const name = entry.name;
+  logEntries = logEntries.filter(e => e.id !== id);
+  render();
+  showToast(`${name} removed`);
+}
+
+function renderWater() {
+  document.getElementById('water-glasses').innerHTML = Array.from({length: state.waterGoal}, (_,i) =>
+    `<button class="mini-glass ${i < state.water ? 'filled' : ''}" onclick="toggleWater(${i})">●</button>`
+  ).join('');
+  const el = document.getElementById('water-count');
+  if (el) el.textContent = `${state.water} of ${state.waterGoal} glasses`;
+}
+function toggleWater(i) { state.water = i < state.water ? i : i+1; renderWater(); }
+
+let activeFilter = 'all';
+let searchQuery = '';
+let pendingFood = null;
+let activeUnit = null;
+
+function openSearch() {
+  document.getElementById('backdrop').classList.add('open');
+  document.getElementById('search-sheet').classList.add('open');
+  activeFilter = 'all'; searchQuery = '';
+  document.getElementById('search-input').value = '';
+  renderCatFilters(); renderResults();
+  setTimeout(() => document.getElementById('search-input').focus(), 150);
+}
+function closeSearch() {
+  document.getElementById('search-sheet').classList.remove('open');
+  document.getElementById('backdrop').classList.remove('open');
+  clearTimeout(offDebounce);
+  offResults = [];
+}
+function closeAll() {
+  closeSearch(); closeQty(); closeGroupDetail();
+  document.getElementById('checkin-sheet').classList.remove('open');
+}
+
+function renderCatFilters() {
+  const pills = [{ id:'all', label:'All', emoji:'' }, ...groups.map(g => ({ id:g.id, label:g.short, emoji:g.emoji }))];
+  document.getElementById('cat-filters').innerHTML = pills.map(p => {
+    const g = getGroup(p.id);
+    const isActive = activeFilter === p.id;
+    const bg = isActive ? (g ? g.color : 'var(--bark)') : 'transparent';
+    const col = isActive ? '#FDFAF7' : 'var(--bark-light)';
+    return `<button class="cat-pill" style="background:${bg};color:${col};border-color:${isActive?'transparent':'var(--bark-faint)'};" onclick="setFilter('${p.id}')">${p.emoji?p.emoji+' ':''}${p.label}</button>`;
+  }).join('');
+}
+function setFilter(id) { activeFilter = id; renderCatFilters(); renderResults(); }
+// ── Open Food Facts integration ──────────────────────────────────────
+// Maps a packaged product's macros to the most appropriate food group.
+function inferGroups(n100) {
+  const { protein = 0, fat = 0, carbs = 0, sugar = 0, kcal = 0 } = n100;
+  const groups = [];
+
+  // Fruit — check FIRST: whole-food profile, low kcal, low fat, low protein,
+  // carbs mostly from natural sugar. Bananas, apples, oranges all land here.
+  const sugarRatio = carbs > 0 ? (sugar || 0) / carbs : 0;
+  const isFruitProfile = kcal < 100 && fat < 2 && protein < 2 && carbs >= 8 && sugarRatio >= 0.5;
+  if (isFruitProfile) { groups.push('fruit'); return groups; } // fruit is never also carbs/fats
+
+  // Vegetables — very low calorie, very low carb
+  if (kcal < 50 && carbs < 8 && protein < 5 && fat < 2) {
+    groups.push('vegetables'); return groups;
+  }
+
+  // Protein — animal if high protein + notable fat; plant if lower fat
+  if (protein >= 15 && fat >= 6)           groups.push('protein-animal');
+  else if (protein >= 15)                  groups.push('protein-animal');
+  else if (protein >= 6 && fat < 8 && carbs >= 10) groups.push('protein-veg');
+  else if (protein >= 6 && fat < 8)        groups.push('protein-animal');
+
+  // Fats — significant fat content
+  if (fat >= 10) groups.push('fats');
+
+  // Sweets — high sugar OR indulgent profile (high kcal, fat + sugar combo)
+  const netSugar = sugar || 0;
+  if (netSugar >= 20 || (kcal >= 300 && fat >= 15 && carbs >= 30)) groups.push('sweets');
+
+  // Carbs — starchy carbs that aren't primarily sugar/sweets
+  const nonSugarCarbs = carbs - (sugar || 0);
+  if (carbs >= 30 && nonSugarCarbs >= 15 && !groups.includes('sweets')) groups.push('carbs');
+
+  // Fallback
+  if (groups.length === 0) {
+    if (protein >= fat && protein >= carbs / 4) groups.push('protein-animal');
+    else if (fat >= carbs / 4)                  groups.push('fats');
+    else                                         groups.push('carbs');
+  }
+
+  return [...new Set(groups)];
+}
+
+// Converts an Open Food Facts product into our food schema.
+function offProductToFood(product) {
+  const name   = product.product_name || product.abbreviated_product_name || 'Unknown product';
+  const brand  = product.brands || '';
+  const n      = product.nutriments || {};
+  const servingQty  = parseFloat(product.serving_quantity) || 100;
+  const servingUnit = (product.serving_quantity_unit || 'g').toLowerCase();
+  const unit   = servingUnit === 'ml' ? 'ml' : 'g';
+
+  // Nutrition per 100g from Open Food Facts
+  const n100 = {
+    kcal:    Math.round((n['energy-kcal_100g'] ?? n['energy-kcal'] ?? (n['energy_100g'] ? n['energy_100g'] / 4.184 : 0)) || 0),
+    protein: Math.round((n['proteins_100g']    || 0) * 10) / 10,
+    fat:     Math.round((n['fat_100g']         || 0) * 10) / 10,
+    carbs:   Math.round((n['carbohydrates_100g'] || 0) * 10) / 10,
+    fiber:   Math.round((n['fiber_100g']        || 0) * 10) / 10,
+    sugar:   Math.round((n['sugars_100g']       || 0) * 10) / 10,
+    sodium:  Math.round((n['sodium_100g']       || 0) * 1000 * 10) / 10, // in mg
+    salt:    Math.round((n['salt_100g']         || 0) * 10) / 10,
+  };
+
+  const gids = inferGroups(n100);
+  const g    = getGroup(gids[0]);
+
+  return {
+    name,
+    brand,
+    displayName: brand ? `${name} · ${brand}` : name,
+    emoji: g.emoji,
+    unit,
+    unitLabel: unit,
+    portionSize: servingQty,
+    altUnits: [],
+    portions: gids.map(gid => ({ group: gid, size: servingQty })),
+    source: `Open Food Facts · serving: ${servingQty}${unit}`,
+    n: n100,
+    isPackaged: true,
+    offId: product.code,
+  };
+}
+
+let offResults    = [];   // live packaged results from API
+let offLoading    = false;
+let offDebounce   = null;
+
+let offError = false;
+
+const USDA_KEY = 'DEMO_KEY';
+const toTitle = s => s.toLowerCase().replace(/(?:^|\s|,|-)\S/g, c => c.toUpperCase());
+
+// Shared nutrient mapper for USDA
+const NID = { kcal:1008, protein:1003, fat:1004, carbs:1005, fiber:1079, sugar:2000, sodium:1093 };
+function getNutrient(nutrients, id) {
+  const n = nutrients.find(n => n.nutrientId === id);
+  return n ? n.value : null;
+}
+
+function usdaToFood(f) {
+  const nutrients = f.foodNutrients || [];
+  const kcal = getNutrient(nutrients, NID.kcal);
+  if (kcal == null || !f.description) return null;
+  const unit = (f.servingSizeUnit || 'g').toLowerCase() === 'ml' ? 'ml' : 'g';
+  const servingSize = parseFloat(f.servingSize) || 100;
+  const n100 = {
+    kcal:    Math.round(kcal),
+    protein: Math.round((getNutrient(nutrients, NID.protein) || 0) * 10) / 10,
+    fat:     Math.round((getNutrient(nutrients, NID.fat)     || 0) * 10) / 10,
+    carbs:   Math.round((getNutrient(nutrients, NID.carbs)   || 0) * 10) / 10,
+    fiber:   getNutrient(nutrients, NID.fiber),
+    sugar:   getNutrient(nutrients, NID.sugar),
+    sodium:  getNutrient(nutrients, NID.sodium),
+  };
+  const gids = inferGroups(n100);
+  const primaryG = getGroup(gids[0]);
+  const name  = toTitle(f.description);
+  const brand = toTitle(f.brandOwner || f.brandName || '');
+  return {
+    name, brand,
+    displayName: brand ? `${name} · ${brand}` : name,
+    emoji: primaryG.emoji, unit, unitLabel: unit,
+    portionSize: servingSize, altUnits: [],
+    portions: gids.map(gid => ({ group: gid, size: servingSize })),
+    source: `USDA FoodData Central · serving: ${servingSize}${unit}`,
+    n: n100, isPackaged: true, _src: 'usda',
+  };
+}
+
+function offToFood(p) {
+  const n = p.nutriments || {};
+  const kcal = n['energy-kcal_100g'] ?? n['energy-kcal'] ?? (n['energy_100g'] ? Math.round(n['energy_100g'] / 4.184) : null);
+  if (kcal == null || !p.product_name) return null;
+  const unit = (p.serving_quantity_unit || 'g').toLowerCase() === 'ml' ? 'ml' : 'g';
+  const servingSize = parseFloat(p.serving_quantity) || 100;
+  const n100 = {
+    kcal:    Math.round(kcal),
+    protein: Math.round((n['proteins_100g']      || 0) * 10) / 10,
+    fat:     Math.round((n['fat_100g']           || 0) * 10) / 10,
+    carbs:   Math.round((n['carbohydrates_100g'] || 0) * 10) / 10,
+    fiber:   n['fiber_100g']  != null ? Math.round(n['fiber_100g']  * 10) / 10 : null,
+    sugar:   n['sugars_100g'] != null ? Math.round(n['sugars_100g'] * 10) / 10 : null,
+    sodium:  n['sodium_100g'] != null ? Math.round(n['sodium_100g'] * 1000)    : null,
+  };
+  const gids = inferGroups(n100);
+  const primaryG = getGroup(gids[0]);
+  const name  = p.product_name;
+  const brand = p.brands || '';
+  return {
+    name, brand,
+    displayName: brand ? `${name} · ${brand}` : name,
+    emoji: primaryG.emoji, unit, unitLabel: unit,
+    portionSize: servingSize, altUnits: [],
+    portions: gids.map(gid => ({ group: gid, size: servingSize })),
+    source: `Open Food Facts · serving: ${servingSize}${unit}`,
+    n: n100, isPackaged: true, _src: 'off',
+  };
+}
+
+async function fetchOFF(query) {
+  if (!query || query.length < 3) { offResults = []; offError = false; renderResults(); return; }
+  offLoading = true;
+  offError = false;
+  renderResults();
+
+  // Search USDA and Open Food Facts in parallel
+  const [usdaResult, offResult] = await Promise.allSettled([
+    fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&dataType=Branded&pageSize=20&api_key=${USDA_KEY}`)
+      .then(r => r.ok ? r.json() : Promise.reject('USDA ' + r.status)),
+    fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,brands,nutriments,serving_quantity,serving_quantity_unit`)
+      .then(r => r.ok ? r.json() : Promise.reject('OFF ' + r.status)),
+  ]);
+
+  const usdaFoods = usdaResult.status === 'fulfilled'
+    ? (usdaResult.value.foods || []).map(usdaToFood).filter(Boolean)
+    : [];
+
+  const offFoods = offResult.status === 'fulfilled'
+    ? (offResult.value.products || []).map(offToFood).filter(Boolean)
+    : [];
+
+  // Deduplicate by name (prefer USDA if same name appears in both)
+  const seen = new Set(usdaFoods.map(f => f.name.toLowerCase()));
+  const uniqueOff = offFoods.filter(f => !seen.has(f.name.toLowerCase()));
+
+  // Score by relevance to query
+  function relevance(f, q) {
+    const name  = f.name.toLowerCase();
+    const brand = f.brand.toLowerCase();
+    const ql    = q.toLowerCase();
+    if (name === ql)                        return 100; // exact
+    if (name.startsWith(ql))               return 90;  // starts with
+    if (brand === ql)                       return 85;
+    if (name.includes(` ${ql}`) || name.includes(`${ql} `)) return 75; // whole word in name
+    if (name.includes(ql))                 return 60;  // substring in name
+    if (brand.includes(ql))                return 40;  // substring in brand
+    return 0;
+  }
+
+  offResults = [...usdaFoods, ...uniqueOff]
+    .map(f => ({ f, score: relevance(f, query) }))
+    .sort((a, b) => b.score - a.score)
+    .map(x => x.f);
+  offError   = offResults.length === 0 && usdaResult.status === 'rejected' && offResult.status === 'rejected';
+
+  offLoading = false;
+  renderResults();
+}
+
+function onSearch() {
+  searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+  renderResults();
+  // Only hit OFF API when not filtered to a specific group and query is long enough
+  if (activeFilter === 'all' && searchQuery.length >= 3) {
+    clearTimeout(offDebounce);
+    offDebounce = setTimeout(() => fetchOFF(searchQuery), 500);
+  } else {
+    offResults = [];
+  }
+}
+
+function resultItemHTML(name, emoji, hint, tags, onclick) {
+  return `<div class="result-item" onclick="${onclick}">
+    <div class="result-emoji">${emoji}</div>
+    <div class="result-info">
+      <div class="result-name">${name}</div>
+      <div class="result-sub">${hint}</div>
+      <div class="result-tags">${tags}</div>
+    </div>
+    <button class="result-add-btn" onclick="event.stopPropagation();${onclick}">+</button>
+  </div>`;
+}
+
+function renderResults() {
+  const container = document.getElementById('search-results');
+
+  // ── Curated whole foods ──
+  let foods = allFoods;
+  if (activeFilter !== 'all') foods = foods.filter(f => f.portions.some(pd => pd.group === activeFilter));
+  if (searchQuery) foods = foods.filter(f => f.name.toLowerCase().includes(searchQuery));
+
+  const curatedHTML = foods.map(f => {
+    const primaryGid = f.portions[0].group;
+    const g = getGroup(primaryGid);
+    const hint = f.unit === 'unit'
+      ? `${f.portionSize} ${f.unitLabel} = 1 portion`
+      : `${f.portionSize}${f.unitLabel} = 1 portion`;
+    const tags = f.portions.map(pd => {
+      const pg = getGroup(pd.group);
+      return `<span class="result-tag" style="background:${pg.faint};color:${pg.tagText}">${pg.name}</span>`;
+    }).join('');
+    return resultItemHTML(f.name, f.emoji, hint, tags, `openQty('${f.name.replace(/'/g, "\\'")}')`);
+  }).join('');
+
+  // ── Packaged foods section ──
+  let packagedHTML = '';
+  if (activeFilter === 'all' && searchQuery.length >= 3) {
+    const sectionLabel = `<div style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;color:var(--bark-light);font-weight:500;padding:16px 4px 8px;">Packaged products</div>`;
+    if (offLoading) {
+      packagedHTML = sectionLabel + `<div style="padding:12px 4px;font-size:13px;color:var(--bark-light);">Searching food database…</div>`;
+    } else if (offError) {
+      packagedHTML = sectionLabel + `<div style="padding:12px 4px;font-size:13px;color:var(--bark-light);">Couldn't reach food database — check your connection</div>`;
+    } else if (offResults.length) {
+      // Store packaged results by index so openQtyPackaged can retrieve them
+      window._offResults = offResults;
+      const items = offResults.map((f, i) => {
+        const g = getGroup(f.portions[0].group);
+        const hint = `${f.portionSize}${f.unitLabel} per serving`;
+        const tags = `<span class="result-tag" style="background:${g.faint};color:${g.tagText}">${g.name}</span>`;
+        return resultItemHTML(
+          f.displayName, f.emoji, hint, tags,
+          `openQtyPackaged(${i})`
+        );
+      }).join('');
+      packagedHTML = sectionLabel + items;
+    } else if (!offLoading && searchQuery.length >= 3) {
+      packagedHTML = sectionLabel + `<div style="padding:12px 4px;font-size:13px;color:var(--bark-light);">No packaged products found</div>`;
+    }
+  }
+
+  if (!curatedHTML && !packagedHTML) {
+    container.innerHTML = `<div class="no-results">No foods found</div>`;
+    return;
+  }
+
+  const curatedSection = curatedHTML
+    ? (searchQuery ? `<div style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;color:var(--bark-light);font-weight:500;padding:4px 4px 8px;">Whole foods</div>` : '') + curatedHTML
+    : '';
+
+  container.innerHTML = curatedSection + packagedHTML;
+}
+
+function openQty(foodName) {
+  const food = getFood(foodName);
+  if (!food) return;
+  pendingFood = food;
+  const g = getGroup(food.portions[0].group);
+  closeSearch();
+  document.getElementById('backdrop').classList.add('open');
+  document.getElementById('qty-emoji').textContent = food.emoji;
+  document.getElementById('qty-name').textContent = food.name;
+
+  // Group label badges
+  document.getElementById('qty-group-label').innerHTML = food.portions.map(pd => {
+    const pg = getGroup(pd.group);
+    return `<span style="background:${pg.faint};color:${pg.tagText};padding:2px 8px;border-radius:12px;font-size:11px;">${pg.name}</span>`;
+  }).join('');
+
+  // Dual-group note
+  const dualNote = document.getElementById('qty-dual-note');
+  if (food.portions.length > 1) {
+    const groupNames = food.portions.map(pd => getGroup(pd.group).name).join(' + ');
+    dualNote.style.display = 'block';
+    dualNote.textContent = `This food counts toward both ${groupNames}. One serving logs a portion in each group.`;
+  } else {
+    dualNote.style.display = 'none';
+  }
+
+  document.getElementById('qty-confirm-btn').style.background = g.color;
+  const units = [food.unit, ...food.altUnits];
+  activeUnit = food.unit;
+  document.getElementById('qty-unit-row').innerHTML = units.map(u => {
+    const label = u === food.unit ? food.unitLabel : u;
+    return `<button class="qty-unit-btn ${u === activeUnit ? 'active' : ''}" onclick="selectUnit('${u}')" data-unit="${u}">${label}</button>`;
+  }).join('');
+
+  document.getElementById('qty-input').value = food.portionSize;
+  updateUnitDisplay();
+  document.getElementById('qty-portion-ref').textContent = food.source;
+  updateHint();
+  document.getElementById('qty-sheet').classList.add('open');
+  setTimeout(() => document.getElementById('qty-input').select(), 100);
+}
+
+// Opens the quantity sheet for a packaged product from Open Food Facts
+function openQtyPackaged(index) {
+  const food = (window._offResults || [])[index];
+  if (!food) return;
+  pendingFood = food;
+  const g = getGroup(food.portions[0].group);
+  closeSearch();
+  document.getElementById('backdrop').classList.add('open');
+  document.getElementById('qty-emoji').textContent = food.emoji;
+  document.getElementById('qty-name').textContent = food.name;
+  document.getElementById('qty-group-label').innerHTML =
+    `<span style="background:${g.faint};color:${g.tagText};padding:2px 8px;border-radius:12px;font-size:11px;">${g.name}</span>
+     <span style="background:var(--bark-faint);color:var(--bark-light);padding:2px 8px;border-radius:12px;font-size:11px;">📦 Packaged</span>`;
+
+  document.getElementById('qty-dual-note').style.display = 'none';
+  document.getElementById('qty-confirm-btn').style.background = g.color;
+
+  // Unit: grams or ml depending on product
+  activeUnit = food.unit;
+  document.getElementById('qty-unit-row').innerHTML =
+    `<button class="qty-unit-btn active" data-unit="${food.unit}" onclick="selectUnit('${food.unit}')">${food.unitLabel}</button>`;
+
+  // Pre-fill with the product's own serving size
+  document.getElementById('qty-input').value = food.portionSize;
+  updateUnitDisplay();
+
+  // Reference note — no calories or macros shown to user
+  document.getElementById('qty-portion-ref').textContent = food.source;
+
+  updateHint();
+  document.getElementById('qty-sheet').classList.add('open');
+  setTimeout(() => document.getElementById('qty-input').select(), 100);
+}
+
+function selectUnit(u) {
+  activeUnit = u;
+  document.querySelectorAll('.qty-unit-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.unit === u));
+  updateUnitDisplay();
+  updateHint();
+}
+
+function updateUnitDisplay() {
+  document.getElementById('qty-unit-display').textContent = activeUnit === pendingFood.unit ? pendingFood.unitLabel : activeUnit;
+}
+
+function updateHint() {
+  const qty = parseFloat(document.getElementById('qty-input').value);
+  if (!pendingFood || isNaN(qty) || qty <= 0) { document.getElementById('qty-hint').innerHTML = ''; return; }
+  const p = calcPortions(pendingFood, qty, activeUnit);
+  const pStr = formatP(p);
+  const word = parseFloat(pStr) === 1 ? 'portion' : 'portions';
+  const multi = pendingFood.portions.length > 1 ? ' (in each group)' : '';
+  document.getElementById('qty-hint').innerHTML = `That's <strong>${pStr} ${word}${multi}</strong>`;
+}
+
+function confirmLog() {
+  const qty = parseFloat(document.getElementById('qty-input').value);
+  if (!pendingFood || isNaN(qty) || qty <= 0) return;
+
+  let portionData, nutrition;
+
+  if (pendingFood.isPackaged) {
+    // Packaged food: nutrition calculated directly from label data (per 100g)
+    const factor = qty / 100;
+    nutrition = {
+      kcal:    Math.round(pendingFood.n.kcal    * factor * 10) / 10,
+      protein: Math.round(pendingFood.n.protein * factor * 10) / 10,
+      fat:     Math.round(pendingFood.n.fat     * factor * 10) / 10,
+      carbs:   Math.round(pendingFood.n.carbs   * factor * 10) / 10,
+      fiber:   Math.round((pendingFood.n.fiber  || 0) * factor * 10) / 10,
+      sugar:   Math.round((pendingFood.n.sugar  || 0) * factor * 10) / 10,
+      sodium:  Math.round((pendingFood.n.sodium || 0) * factor * 10) / 10,
+    };
+    // Assign fractional portions based on how much of the serving was eaten
+    const servingRatio = qty / pendingFood.portionSize;
+    portionData = pendingFood.portions.map(pd => ({ group: pd.group, p: Math.round(servingRatio * 10) / 10 }));
+  } else {
+    // Curated whole food: use our standard portion + nutrition calculation
+    const p = pendingFood.free ? 0 : Math.round(calcPortions(pendingFood, qty, activeUnit) * 10) / 10;
+    portionData = pendingFood.portions.map(pd => ({ group: pd.group, p }));
+    nutrition   = calcNutrition(pendingFood, qty, activeUnit);
+  }
+
+  const entry = {
+    id: nextId++,
+    name: pendingFood.name,
+    qty,
+    unit: activeUnit,
+    portionData,
+    nutrition,
+    isPackaged: !!pendingFood.isPackaged,
+    brand: pendingFood.brand || null,
+    free: !!pendingFood.free,
+  };
+  logEntries.push(entry);
+
+  // Capture before closeQty() nulls pendingFood
+  const primaryGid  = pendingFood.portions[0].group;
+  const loggedName  = pendingFood.name;
+  closeQty();
+  render();
+  showToast(`${loggedName} logged`);
+  setTimeout(() => {
+    const log  = document.getElementById(`log-${primaryGid}`);
+    const chev = document.getElementById(`chev-${primaryGid}`);
+    if (log)  log.classList.add('open');
+    if (chev) chev.style.transform = 'rotate(90deg)';
+  }, 30);
+}
+
+function closeQty() {
+  document.getElementById('qty-sheet').classList.remove('open');
+  document.getElementById('backdrop').classList.remove('open');
+  pendingFood = null;
+}
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+function render() { renderGroups(); renderGroupGrid(); renderSummary(); saveTodayLog(); }
+
+// ── Group grid ────────────────────────────────────────────────────────
+function renderGroupGrid() {
+  const el = document.getElementById('group-grid');
+  if (!el) return;
+  el.innerHTML = groups.map(g => {
+    const total = groupTotal(g.id);
+    const filled = Math.min(Math.floor(total), g.goal);
+    const done = total >= g.goal;
+    const pips = Array.from({length: g.goal}, (_, i) =>
+      `<div class="tile-pip" style="background:${i < filled ? g.color : 'var(--bark-faint)'};"></div>`
+    ).join('');
+    return `<div class="group-tile${done ? ' done' : ''}" style="--tile-color:${g.color};" onclick="openGroupDetail('${g.id}')">
+      <div class="tile-icon" style="background:${g.faint};">${g.emoji}</div>
+      <div style="font-size:12px;font-weight:500;color:var(--bark);margin-bottom:6px;line-height:1.2;">${g.name}</div>
+      <div class="tile-pips">${pips}</div>
+      <div class="tile-count" style="color:${done ? g.color : 'var(--bark-light)'};">${formatP(total)}/${g.goal}${done ? ' ✓' : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Group detail sheet ────────────────────────────────────────────────
+let activeGroupDetail = null;
+
+function openGroupDetail(gid) {
+  const g = getGroup(gid);
+  if (!g) return;
+  activeGroupDetail = gid;
+  const total = groupTotal(gid);
+  document.getElementById('detail-group-name').textContent = g.name;
+  const emojiEl = document.getElementById('detail-group-emoji');
+  emojiEl.textContent = g.emoji;
+  emojiEl.style.background = g.faint;
+  document.getElementById('detail-progress').textContent = `${formatP(total)} of ${g.goal} portions today`;
+  const addBtn = document.getElementById('detail-add-btn');
+  addBtn.style.background = g.color;
+  addBtn.textContent = `+ Add ${g.name.toLowerCase()}`;
+
+  const entries = entriesForGroup(gid);
+  document.getElementById('detail-entries').innerHTML = entries.length
+    ? entries.map(e => {
+        const pd = e.portionData.find(d => d.group === gid);
+        const p = pd ? formatP(pd.p) : '?';
+        const word = parseFloat(p) === 1 ? 'portion' : 'portions';
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--bark-faint);">
+          <div style="display:flex;align-items:center;gap:9px;min-width:0;">
+            <div style="width:7px;height:7px;border-radius:50%;background:${g.color};flex-shrink:0;"></div>
+            <div style="min-width:0;">
+              <div style="font-size:14px;color:var(--bark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.name}</div>
+              <div style="font-size:11px;color:var(--bark-light);">${e.qty} ${e.unit}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            <span style="font-size:11px;padding:3px 8px;border-radius:20px;background:${g.faint};color:${g.color};">${p} ${word}</span>
+            <button onclick="removeEntry(${e.id});refreshGroupDetail();" style="background:none;border:none;color:var(--bark-light);cursor:pointer;font-size:20px;padding:2px 6px;line-height:1;">×</button>
+          </div>
+        </div>`;
+      }).join('')
+    : `<div style="padding:24px 0;font-size:13px;color:var(--bark-light);text-align:center;">Nothing logged yet for ${g.name.toLowerCase()}.</div>`;
+
+  document.getElementById('backdrop').classList.add('open');
+  document.getElementById('group-detail-sheet').classList.add('open');
+}
+
+function refreshGroupDetail() {
+  if (activeGroupDetail) openGroupDetail(activeGroupDetail);
+}
+
+function closeGroupDetail() {
+  const sheet = document.getElementById('group-detail-sheet');
+  if (!sheet) return;
+  sheet.classList.remove('open');
+  document.getElementById('backdrop').classList.remove('open');
+  activeGroupDetail = null;
+}
+
+function addToGroup() {
+  const gid = activeGroupDetail;
+  closeGroupDetail();
+  setTimeout(() => {
+    openSearch();  // openSearch resets activeFilter to 'all'
+    activeFilter = gid || 'all';
+    renderCatFilters(); renderResults();
+  }, 80);
+}
+
+// ── Screen management ────────────────────────────────────────────────
+let currentScreen = 'today';
+
+function showScreen(name) {
+  ['today', 'progress', 'insights', 'settings'].forEach(s => {
+    const el = document.getElementById(`screen-${s}`);
+    if (el) el.style.display = s === name ? '' : 'none';
+    const nav = document.getElementById(`nav-${s}`);
+    if (nav) nav.classList.toggle('active', s === name);
+  });
+  document.querySelector('.fab').style.display = name === 'today' ? '' : 'none';
+  currentScreen = name;
+  if (name === 'settings') renderSettings();
+  if (name === 'progress') renderProgress();
+  if (name === 'insights') renderInsights();
+}
+
+// ── Strava OAuth (implicit flow — no client secret needed) ───────────
+const stravaRedirectURI = () => window.location.href.split('?')[0].split('#')[0];
+
+const activityEmoji = {
+  Run:'🏃', Ride:'🚴', VirtualRide:'🚴', Swim:'🏊', Walk:'🚶', Hike:'🥾',
+  WeightTraining:'🏋️', Yoga:'🧘', Workout:'💪', Elliptical:'🏃',
+  StairStepper:'🪜', Rowing:'🚣', Tennis:'🎾', Soccer:'⚽',
+  Basketball:'🏀', AlpineSki:'⛷️', NordicSki:'⛷️', Kayaking:'🚣',
+};
+
+function fmtDist(m) { return m >= 1000 ? `${(m/1000).toFixed(1)} km` : `${Math.round(m)} m`; }
+function fmtDur(s)  { const h=Math.floor(s/3600), m=Math.floor((s%3600)/60); return h>0?`${h}h ${m}m`:`${m} min`; }
+
+let stravaActivities = [];
+let stravaAthlete    = null;
+
+function handleStravaBtn() {
+  const token  = localStorage.getItem('strava_token');
+  if (token) { disconnectStrava(); return; }
+  const cid    = localStorage.getItem('strava_client_id');
+  const secret = localStorage.getItem('strava_client_secret');
+  if (!cid || !secret) {
+    const box  = document.getElementById('strava-setup-box');
+    box.style.display = '';
+    // Pre-fill Client ID if we already have it
+    if (cid) document.getElementById('strava-client-id-input').value = cid;
+    const hint = document.getElementById('strava-domain-hint');
+    try { hint.textContent = new URL(stravaRedirectURI()).hostname || 'localhost'; } catch(e) { hint.textContent = 'localhost'; }
+    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  launchStravaOAuth(cid);
+}
+
+function saveStravaClientId() {
+  const cid    = document.getElementById('strava-client-id-input').value.trim();
+  const secret = document.getElementById('strava-client-secret-input').value.trim();
+  if (!cid || !secret) { showToast('Enter both Client ID and Secret'); return; }
+  localStorage.setItem('strava_client_id', cid);
+  localStorage.setItem('strava_client_secret', secret);
+  document.getElementById('strava-setup-box').style.display = 'none';
+  launchStravaOAuth(cid);
+}
+
+function launchStravaOAuth(clientId) {
+  const url = `https://www.strava.com/oauth/authorize`
+    + `?client_id=${encodeURIComponent(clientId)}`
+    + `&response_type=code`
+    + `&redirect_uri=${encodeURIComponent(stravaRedirectURI())}`
+    + `&scope=activity:read_all`
+    + `&approval_prompt=auto`;
+  window.location.href = url;
+}
+
+function disconnectStrava() {
+  localStorage.removeItem('strava_token');
+  localStorage.removeItem('strava_athlete');
+  stravaActivities = [];
+  stravaAthlete    = null;
+  renderActivityCard();
+  renderConnectedApps();
+  showToast('Strava disconnected');
+}
+
+async function fetchStravaData(token) {
+  try {
+    // Fetch athlete profile
+    const ar = await fetch('https://www.strava.com/api/v3/athlete', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (ar.status === 401) { disconnectStrava(); return; }
+    if (!ar.ok) throw new Error('athlete');
+    stravaAthlete = await ar.json();
+    localStorage.setItem('strava_athlete', JSON.stringify(stravaAthlete));
+
+    // Fetch today's activities
+    const today = new Date(); today.setHours(0,0,0,0);
+    const after = Math.floor(today.getTime() / 1000);
+    const acr = await fetch(
+      `https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=10`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!acr.ok) throw new Error('activities');
+    stravaActivities = await acr.json();
+  } catch(e) {
+    console.warn('Strava fetch:', e.message);
+  }
+  renderActivityCard();
+  renderConnectedApps();
+}
+
+function renderActivityCard() {
+  const card = document.getElementById('activity-card');
+  if (!card) return;
+  const token = localStorage.getItem('strava_token');
+
+  if (!token) {
+    card.innerHTML = `
+      <div class="mini-widget-title">🏃 Activity</div>
+      <div style="font-size:12px;color:var(--bark-light);margin-bottom:8px;">No app connected</div>
+      <button onclick="showScreen('settings')" style="font-size:11px;padding:4px 10px;border-radius:20px;border:1.5px solid var(--bark-faint);background:transparent;color:var(--bark-light);cursor:pointer;font-family:var(--font-body);">Connect →</button>`;
+    return;
+  }
+
+  const name = stravaAthlete ? stravaAthlete.firstname : 'You';
+  const badge = `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:#FEF0E6;color:#FC4C02;font-weight:500;">Strava ✓</span>`;
+
+  if (!stravaActivities.length) {
+    card.innerHTML = `
+      <div class="mini-widget-title" style="display:flex;align-items:center;justify-content:space-between;">🏃 Activity ${badge}</div>
+      <div style="font-size:12px;color:var(--bark-light);">Rest day, ${name}</div>`;
+    return;
+  }
+
+  const rows = stravaActivities.slice(0, 2).map(a => {
+    const emoji = activityEmoji[a.type] || '💪';
+    const dur = fmtDur(a.moving_time);
+    return `<div style="display:flex;align-items:center;gap:6px;padding:3px 0;">
+      <span style="font-size:13px;">${emoji}</span>
+      <span style="font-size:12px;color:var(--bark);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.name}</span>
+      <span style="font-size:11px;color:var(--bark-light);white-space:nowrap;">${dur}</span>
+    </div>`;
+  }).join('');
+
+  card.innerHTML = `
+    <div class="mini-widget-title" style="display:flex;align-items:center;justify-content:space-between;">🏃 Activity ${badge}</div>
+    ${rows}`;
+}
+
+// ── Settings screen ──────────────────────────────────────────────────
+function renderConnectedApps() {
+  const token = localStorage.getItem('strava_token');
+  const btn   = document.getElementById('strava-conn-btn');
+  const status = document.getElementById('strava-status-text');
+  if (!btn || !status) return;
+  if (token) {
+    const n = stravaAthlete ? `${stravaAthlete.firstname} ${stravaAthlete.lastname}` : '';
+    status.textContent = n ? `Connected · ${n}` : 'Connected';
+    btn.textContent = 'Disconnect';
+    btn.classList.add('connected');
+  } else {
+    status.textContent = 'Not connected';
+    btn.textContent = 'Connect';
+    btn.classList.remove('connected');
+  }
+}
+
+function changeGoal(gid, delta) {
+  const g = getGroup(gid);
+  if (!g) return;
+  g.goal = Math.max(1, g.goal + delta);
+  document.getElementById(`goal-val-${gid}`).textContent = g.goal;
+  render();
+}
+
+function renderGoalsSettings() {
+  const c = document.getElementById('goals-settings');
+  if (!c) return;
+  c.innerHTML = groups.map(g => `
+    <div class="goal-item">
+      <div style="font-size:18px;">${g.emoji}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:500;color:var(--bark);">${g.name}</div>
+      </div>
+      <div class="stepper">
+        <button class="stepper-btn" onclick="changeGoal('${g.id}',-1)">−</button>
+        <span class="stepper-val" id="goal-val-${g.id}">${g.goal}</span>
+        <button class="stepper-btn" onclick="changeGoal('${g.id}',1)">+</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderSettings() {
+  renderConnectedApps();
+  renderGoalsSettings();
+}
+
+// ── localStorage persistence ─────────────────────────────────────────
+function todayKey() { return new Date().toISOString().split('T')[0]; }
+
+function saveTodayLog() {
+  localStorage.setItem(`nourish_log_${todayKey()}`, JSON.stringify(logEntries));
+}
+
+function loadTodayLog() {
+  const saved = localStorage.getItem(`nourish_log_${todayKey()}`);
+  if (saved) { try { logEntries = JSON.parse(saved); } catch(e) {} }
+}
+
+function getLogHistory(days) {
+  const out = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    const raw = i === 0 ? logEntries : (() => {
+      const s = localStorage.getItem(`nourish_log_${key}`);
+      return s ? JSON.parse(s) : [];
+    })();
+    const groupTotals = {};
+    groups.forEach(g => {
+      groupTotals[g.id] = raw.reduce((sum, e) => {
+        const pd = (e.portionData || []).find(d => d.group === g.id);
+        return sum + (pd ? pd.p : 0);
+      }, 0);
+    });
+    out.push({ date: key, entries: raw, groupTotals });
+  }
+  return out;
+}
+
+function getCheckinHistory(days) {
+  const out = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    const s = localStorage.getItem(`nourish_checkin_${key}`);
+    if (s) { try { out.push({ date: key, ...JSON.parse(s) }); } catch(e) {} }
+  }
+  return out;
+}
+
+function todayCheckin() {
+  const s = localStorage.getItem(`nourish_checkin_${todayKey()}`);
+  return s ? JSON.parse(s) : null;
+}
+
+function saveCheckin(sleep, energy, mood) {
+  localStorage.setItem(`nourish_checkin_${todayKey()}`, JSON.stringify({ sleep, energy, mood }));
+}
+
+// ── Check-in card ────────────────────────────────────────────────────
+const checkinState = { sleep: 0, energy: 0, mood: 0 };
+
+function renderCheckinPips() {
+  ['sleep','energy','mood'].forEach(dim => {
+    const el = document.getElementById(`pip-${dim}`);
+    if (!el) return;
+    el.innerHTML = [1,2,3,4,5].map(v =>
+      `<button class="checkin-pip ${checkinState[dim]>=v?'on':''}" onclick="setPip('${dim}',${v})">${v}</button>`
+    ).join('');
+  });
+}
+
+function setPip(dim, val) {
+  checkinState[dim] = val;
+  renderCheckinPips();
+}
+
+function maybeShowCheckin() {
+  const chip = document.getElementById('checkin-chip');
+  if (!chip) return;
+  const skipped  = localStorage.getItem(`nourish_skip_${todayKey()}`);
+  const existing = todayCheckin();
+  if (skipped || existing) { chip.style.display = 'none'; return; }
+
+  const h = new Date().getHours();
+  const greeting = h < 12 ? 'Good morning 🌅' : h < 18 ? 'Good afternoon ☀️' : 'Good evening 🌙';
+  document.getElementById('checkin-greeting').textContent = greeting;
+  const label = h < 12 ? 'Morning check-in' : h < 18 ? 'Afternoon check-in' : 'Evening check-in';
+  document.getElementById('checkin-chip-text').textContent = label + ' — how are you feeling?';
+  chip.style.display = 'flex';
+}
+
+function openCheckin() {
+  checkinState.sleep = 0; checkinState.energy = 0; checkinState.mood = 0;
+  renderCheckinPips();
+  document.getElementById('backdrop').classList.add('open');
+  document.getElementById('checkin-sheet').classList.add('open');
+}
+
+function submitCheckin() {
+  if (!checkinState.sleep || !checkinState.energy || !checkinState.mood) {
+    showToast('Rate all three to log'); return;
+  }
+  saveCheckin(checkinState.sleep, checkinState.energy, checkinState.mood);
+  document.getElementById('checkin-sheet').classList.remove('open');
+  document.getElementById('backdrop').classList.remove('open');
+  document.getElementById('checkin-chip').style.display = 'none';
+  showToast('Check-in saved ✓');
+}
+
+function skipCheckin() {
+  localStorage.setItem(`nourish_skip_${todayKey()}`, '1');
+  document.getElementById('checkin-sheet').classList.remove('open');
+  document.getElementById('backdrop').classList.remove('open');
+  document.getElementById('checkin-chip').style.display = 'none';
+}
+
+// ── Progress screen ──────────────────────────────────────────────────
+let activePeriod = 'week';
+
+function setPeriod(p) {
+  activePeriod = p;
+  document.getElementById('tab-week').classList.toggle('active', p === 'week');
+  document.getElementById('tab-month').classList.toggle('active', p === 'month');
+  renderProgress();
+}
+
+function renderProgress() {
+  const days = activePeriod === 'week' ? 7 : 30;
+  const history = getLogHistory(days);
+  const checkins = getCheckinHistory(days);
+
+  // Food goals card
+  const foodEl = document.getElementById('prog-food');
+  if (foodEl) {
+    const label = activePeriod === 'week' ? '7 days' : '30 days';
+    foodEl.innerHTML = `<div class="prog-card-label">Goal hit rate · last ${label}</div>` +
+      groups.map(g => {
+        const daysHit = history.filter(d => (d.groupTotals[g.id] || 0) >= g.goal).length;
+        const pct = Math.round((daysHit / days) * 100);
+        const daysWithData = history.filter(d => d.entries.length > 0).length || 1;
+        const hitOfLogged = history.filter(d => d.entries.length > 0 && (d.groupTotals[g.id] || 0) >= g.goal).length;
+        return `<div class="prog-row">
+          <span style="font-size:15px;width:22px;text-align:center;">${g.emoji}</span>
+          <span style="font-size:13px;color:var(--bark);width:82px;flex-shrink:0;">${g.name}</span>
+          <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:${pct}%;background:${g.color};"></div></div>
+          <span class="prog-val">${hitOfLogged}/${daysWithData}d</span>
+        </div>`;
+      }).join('');
+  }
+
+  // Check-ins card
+  const ciEl = document.getElementById('prog-checkins');
+  if (ciEl) {
+    if (!checkins.length) {
+      ciEl.innerHTML = `<div class="prog-card-label">How you felt</div><div style="font-size:13px;color:var(--bark-light);">No check-ins yet — fill in the daily prompt on Today.</div>`;
+    } else {
+      const avg = dim => Math.round((checkins.reduce((s,c) => s + (c[dim]||0), 0) / checkins.length) * 10) / 10;
+      const dots = (val, color) => [1,2,3,4,5].map(i =>
+        `<span style="width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:3px;background:${i<=Math.round(val)?color:'var(--bark-faint)'};"></span>`
+      ).join('');
+      ciEl.innerHTML = `<div class="prog-card-label">Average · ${checkins.length} check-ins</div>
+        <div class="prog-row"><span style="font-size:15px;width:22px;">😴</span><span style="font-size:13px;color:var(--bark);width:60px;">Sleep</span><div style="flex:1;">${dots(avg('sleep'),'#5B8FA8')}</div><span class="prog-val">${avg('sleep')}/5</span></div>
+        <div class="prog-row"><span style="font-size:15px;width:22px;">⚡</span><span style="font-size:13px;color:var(--bark);width:60px;">Energy</span><div style="flex:1;">${dots(avg('energy'),'#C49A3C')}</div><span class="prog-val">${avg('energy')}/5</span></div>
+        <div class="prog-row"><span style="font-size:15px;width:22px;">☀️</span><span style="font-size:13px;color:var(--bark);width:60px;">Mood</span><div style="flex:1;">${dots(avg('mood'),'#7A9E7E')}</div><span class="prog-val">${avg('mood')}/5</span></div>`;
+    }
+  }
+
+  // Activity card
+  const actEl = document.getElementById('prog-activity-body');
+  if (actEl) {
+    const token = localStorage.getItem('strava_token');
+    if (!token) {
+      actEl.textContent = 'Connect Strava in Settings to see activity here.';
+    } else if (stravaActivities.length) {
+      actEl.innerHTML = stravaActivities.map(a => {
+        const emoji = activityEmoji[a.type] || '💪';
+        const parts = [fmtDur(a.moving_time)];
+        if (a.distance > 100) parts.push(fmtDist(a.distance));
+        return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bark-faint);">
+          <span style="font-size:16px;">${emoji}</span>
+          <span style="font-size:13px;color:var(--bark);flex:1;">${a.name}</span>
+          <span style="font-size:12px;color:var(--bark-light);">${parts.join(' · ')}</span>
+        </div>`;
+      }).join('') + `<div style="font-size:12px;color:var(--bark-light);margin-top:8px;">Showing today's activities from Strava.</div>`;
+    } else {
+      actEl.textContent = 'No activities logged today via Strava.';
+    }
+  }
+}
+
+// ── Insights engine ──────────────────────────────────────────────────
+function renderInsights() {
+  const el = document.getElementById('insights-list');
+  if (!el) return;
+  const history  = getLogHistory(7);
+  const checkins = getCheckinHistory(7);
+  const daysWithData = history.filter(d => d.entries.length > 0).length;
+  document.getElementById('insights-period-label').textContent = `Based on the last 7 days · ${daysWithData} day${daysWithData!==1?'s':''} logged`;
+
+  const cards = [];
+
+  if (daysWithData === 0) {
+    el.innerHTML = `<div class="insights-empty">Start logging meals on the Today tab and checking in daily — your personalized insights will appear here after a few days. 🌱</div>`;
+    return;
+  }
+
+  // ── Food pattern rules ───────────────────────────────────────────
+  groups.forEach(g => {
+    const daysHit  = history.filter(d => d.entries.length > 0 && (d.groupTotals[g.id]||0) >= g.goal).length;
+    const daysLogged = history.filter(d => d.entries.length > 0).length;
+    const rate = daysLogged ? daysHit / daysLogged : 0;
+
+    if (g.id === 'vegetables' && rate < 0.5 && daysLogged >= 2) {
+      cards.push({ icon:'🥦', type:'food', color:'#5B8FA8', bg:'#EDF4F8',
+        title: 'Vegetables are often below goal',
+        body: `You hit your vegetable goal ${daysHit} of ${daysLogged} days logged. Vegetables are your richest source of fiber, antioxidants, and micronutrients. Even small additions — a handful of spinach, some roasted zucchini — add up quickly.` });
+    }
+    if (g.id === 'vegetables' && rate >= 0.8 && daysLogged >= 3) {
+      cards.push({ icon:'🥦', type:'positive', color:'#7A9E7E', bg:'#EBF2EC',
+        title: 'Strong vegetable consistency',
+        body: `You've hit your vegetable goal ${daysHit} of ${daysLogged} days. This is one of the highest-impact habits for long-term health — keep it going.` });
+    }
+    if (g.id === 'protein-animal' && rate >= 0.85 && daysLogged >= 3) {
+      cards.push({ icon:'🥩', type:'positive', color:'#C4714A', bg:'#FAF0EA',
+        title: 'Solid protein habit',
+        body: `Your animal protein goal has been met ${daysHit} of ${daysLogged} days. Consistent protein intake supports muscle maintenance, satiety, and steady energy.` });
+    }
+    if (g.id === 'fruit' && rate < 0.4 && daysLogged >= 3) {
+      cards.push({ icon:'🍓', type:'food', color:'#D4537E', bg:'#FBEAF0',
+        title: 'Fruit intake has been low',
+        body: `Fruit provides natural sugars, fiber, and antioxidants that differ from vegetables. Even 1–2 pieces a day — an apple, some berries — adds meaningful nutritional variety.` });
+    }
+    if (g.id === 'fats' && rate < 0.4 && daysLogged >= 3) {
+      cards.push({ icon:'🥑', type:'supplement', color:'#8B5E83', bg:'#F5EEF4',
+        title: 'Dietary fats are often low',
+        body: `Healthy fats are essential for hormone production, brain function, and absorbing fat-soluble vitamins (A, D, E, K). Try adding avocado, olive oil, or a small handful of nuts.`,
+        supp: { title:'Consider: Omega-3 (if oily fish is rarely eaten)', body:`Look for fish oil or algae-based Omega-3 with at least <strong>500mg combined EPA+DHA</strong> per serving. Algae-based is a good option if you prefer plant-derived. Check for third-party testing (IFOS or NSF certification).` }
+      });
+    }
+  });
+
+  // ── Check-in pattern rules ───────────────────────────────────────
+  if (checkins.length >= 2) {
+    const avg = dim => checkins.reduce((s,c) => s+(c[dim]||0),0) / checkins.length;
+    const sleepAvg  = avg('sleep');
+    const energyAvg = avg('energy');
+
+    if (sleepAvg < 2.8) {
+      cards.push({ icon:'😴', type:'supplement', color:'#5B8FA8', bg:'#EDF4F8',
+        title: 'Sleep has been rough lately',
+        body: `Your average sleep rating is ${sleepAvg.toFixed(1)}/5 over the last ${checkins.length} check-ins. Poor sleep affects hunger hormones, mood, and recovery. Consistent sleep and wake times — even on weekends — tend to help more than any supplement.`,
+        supp: { title:'Worth exploring: Magnesium glycinate', body:`Magnesium glycinate is the most well-studied form for sleep quality. Look for products with <strong>200–400mg elemental magnesium</strong>, taken 30–60 min before bed. Avoid magnesium oxide — it's poorly absorbed. Check for third-party testing (USP or NSF).` }
+      });
+    } else if (sleepAvg < 3.5) {
+      cards.push({ icon:'😴', type:'lifestyle', color:'#5B8FA8', bg:'#EDF4F8',
+        title: 'Sleep quality is moderate',
+        body: `Your average sleep rating is ${sleepAvg.toFixed(1)}/5. Some factors that reliably improve sleep quality: limiting screens in the last hour, keeping the room cool, and avoiding caffeine after 2pm.` });
+    }
+
+    if (energyAvg < 2.8) {
+      const vegRate = history.filter(d => d.entries.length>0 && (d.groupTotals['vegetables']||0) >= getGroup('vegetables').goal).length / Math.max(daysWithData,1);
+      cards.push({ icon:'⚡', type:'supplement', color:'#C49A3C', bg:'#FBF5E6',
+        title: 'Energy has been consistently low',
+        body: `Your average energy rating is ${energyAvg.toFixed(1)}/5. Low energy often tracks with disrupted sleep, low iron intake, or insufficient carbohydrates — especially on active days.${vegRate<0.5?' Low vegetable intake may also be reducing your micronutrient intake.':''}`,
+        supp: { title:'Consider: Vitamin D (if rarely outdoors)', body:`Vitamin D deficiency is extremely common and directly linked to fatigue and low mood. Look for <strong>Vitamin D3 (not D2)</strong>, ideally paired with K2 for absorption. 1,000–2,000 IU daily is a common maintenance dose — a blood test can confirm if you're deficient.` }
+      });
+    }
+
+    // Cross: poor sleep + low fats (omega-3)
+    const fatRate = history.filter(d => d.entries.length>0 && (d.groupTotals['fats']||0) >= getGroup('fats').goal).length / Math.max(daysWithData,1);
+    if (sleepAvg < 3.2 && fatRate < 0.4 && !cards.find(c => c.supp?.title?.includes('Omega'))) {
+      cards.push({ icon:'🐟', type:'supplement', color:'#5B8FA8', bg:'#EDF4F8',
+        title: 'Low dietary fat + poor sleep — Omega-3 may help',
+        body: `Omega-3 fatty acids (especially DHA) play a role in brain function and sleep regulation. When dietary fat intake is low and sleep is poor, it's worth considering.`,
+        supp: { title:'What to look for in an Omega-3 supplement', body:`Choose a product with at least <strong>500mg combined EPA+DHA per serving</strong>. Look for "triglyceride form" on the label — it absorbs better than ethyl ester form. IFOS or NSF certification means the oil has been tested for purity and oxidation.` }
+      });
+    }
+  }
+
+  // ── Strava cross-reference ───────────────────────────────────────
+  if (stravaActivities.length > 0 && daysWithData > 0) {
+    const todayCarbs = history[0].groupTotals['carbs'] || 0;
+    const carbGoal   = getGroup('carbs').goal;
+    if (todayCarbs < carbGoal * 0.7) {
+      cards.push({ icon:'🏃', type:'food', color:'#BA7517', bg:'#FAEEDA',
+        title: 'Active day, but carbs were low',
+        body: `You logged a workout today but your carbohydrate intake was below goal. Carbs are your muscles' primary fuel source and key to recovery after exercise. A portion of oats, rice, or sweet potato post-workout makes a real difference.` });
+    }
+  }
+
+  // ── Rotating learn card ──────────────────────────────────────────
+  const learns = [
+    { icon:'🌈', title:'Why eating the rainbow matters', body:`Different colors in vegetables and fruits signal different antioxidants and phytonutrients. Red (lycopene), orange (beta-carotene), purple (anthocyanins) — no single supplement replicates the variety you get from whole foods.` },
+    { icon:'🧠', title:'Gut bacteria and mood are connected', body:`About 90% of serotonin is produced in the gut. A diverse diet high in fiber and fermented foods feeds the bacteria that support this. Kefir, yogurt, and a wide variety of vegetables are your best tools.` },
+    { icon:'🐟', title:'EPA vs DHA vs ALA — not all Omega-3s are the same', body:`ALA comes from plants (flaxseed, walnuts) but your body converts very little of it to EPA and DHA, which are the active forms. If you don't eat oily fish 2–3x per week, a direct EPA/DHA source is worth considering.` },
+    { icon:'⏰', title:'Protein timing and muscle recovery', body:`Muscle protein synthesis peaks when protein is spread across meals rather than concentrated in one. Aim for a source of protein at each main meal — this matters more than the total daily number.` },
+    { icon:'☀️', title:'Vitamin D: the most common deficiency', body:`Vitamin D is technically a hormone. It regulates immune function, mood, bone density, and energy. Most people who work indoors in temperate climates are deficient — a blood test (25-OH vitamin D) is the only way to know for sure.` },
+    { icon:'💧', title:'How hydration affects hunger', body:`Mild dehydration is often mistaken for hunger. If you find yourself snacking when you weren't expecting to be hungry, try a large glass of water first. Your water goal here accounts for this.` },
+  ];
+  const learnCard = learns[new Date().getDay() % learns.length];
+  cards.push({ ...learnCard, type:'learn', color:'var(--bark)', bg:'var(--bark-faint)' });
+
+  // ── Render cards ─────────────────────────────────────────────────
+  const typeLabel = { food:'Food pattern', positive:'Going well', lifestyle:'Lifestyle', supplement:'Supplement note', learn:'Worth knowing' };
+  const typeColor = { food:'var(--bark)', positive:'#7A9E7E', lifestyle:'var(--sky)', supplement:'#8B5E83', learn:'var(--bark-light)' };
+
+  el.innerHTML = cards.map(c => `
+    <div class="insight-card" style="border-left:3px solid ${c.color};">
+      <div class="insight-icon">${c.icon}</div>
+      <div style="flex:1;min-width:0;">
+        <span class="insight-tag" style="background:${c.bg};color:${typeColor[c.type]||'var(--bark)'};margin-bottom:6px;">${typeLabel[c.type]||''}</span>
+        <div class="insight-title">${c.title}</div>
+        <div class="insight-body">${c.body}</div>
+        ${c.supp ? `<div class="supp-box"><strong>💊 ${c.supp.title}</strong>${c.supp.body}</div>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+// ── OAuth callback (runs on page load if Strava redirected back) ──────
+async function handleOAuthCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code   = params.get('code');
+  if (!code) return;
+
+  // Clean up URL immediately
+  window.history.replaceState({}, '', window.location.pathname);
+
+  const cid    = localStorage.getItem('strava_client_id');
+  const secret = localStorage.getItem('strava_client_secret');
+  if (!cid || !secret) { showToast('Missing Strava credentials'); return; }
+
+  try {
+    const res = await fetch('https://www.strava.com/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_id:     cid,
+        client_secret: secret,
+        code,
+        grant_type:    'authorization_code',
+      }),
+    });
+    if (!res.ok) throw new Error('Token exchange failed');
+    const data = await res.json();
+    localStorage.setItem('strava_token', data.access_token);
+    if (data.athlete) {
+      stravaAthlete = data.athlete;
+      localStorage.setItem('strava_athlete', JSON.stringify(data.athlete));
+    }
+    await fetchStravaData(data.access_token);
+    showToast('Strava connected! 🏃');
+  } catch(e) {
+    console.error('Strava token exchange:', e);
+    showToast('Strava connection failed — check credentials');
+  }
+}
+
+// ── Init ─────────────────────────────────────────────────────────────
+// Load today's saved log if it exists, otherwise seed with sample data
+const _hasSavedLog = !!localStorage.getItem(`nourish_log_${todayKey()}`);
+if (_hasSavedLog) { loadTodayLog(); } else { seedLogs(); }
+
+document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+render();
+renderWater();
+maybeShowCheckin();
+
+// Restore Strava session
+const _savedToken   = localStorage.getItem('strava_token');
+const _savedAthlete = localStorage.getItem('strava_athlete');
+if (_savedToken) {
+  if (_savedAthlete) { try { stravaAthlete = JSON.parse(_savedAthlete); } catch(e) {} }
+  fetchStravaData(_savedToken);
+}
+renderActivityCard();
+handleOAuthCallback();
+</script>
+</body>
+</html>
