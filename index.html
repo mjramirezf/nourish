@@ -10,10 +10,10 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --cream: #F7F3EE; --warm-white: #FDFAF7;
-  --bark: #5C4A38; --bark-light: #8A7060; --bark-faint: #E8E0D6;
-  --terracotta: #C4714A; --terracotta-light: #E09B78; --terracotta-faint: #FAF0EA;
-  --sky: #5B8FA8; --sky-faint: #EDF4F8;
+  --cream: #F9F8FF; --warm-white: #FFFFFF;
+  --bark: #1A1540; --bark-light: #6B5EA8; --bark-faint: #E8E5F5;
+  --terracotta: #7B6FCC; --terracotta-light: #A99DE0; --terracotta-faint: #EDEAFB;
+  --sky: #4CAF82; --sky-faint: #E8F7EF;
   --radius: 16px; --radius-sm: 10px;
   --font-display: 'Lora', serif; --font-body: 'DM Sans', sans-serif;
 }
@@ -115,7 +115,7 @@ body { font-family: var(--font-body); background: var(--cream); color: var(--bar
 .qty-food-emoji { font-size: 26px; }
 .qty-food-name { font-size: 17px; font-weight: 500; color: var(--bark); }
 .qty-food-group { font-size: 12px; color: var(--bark-light); margin-top: 3px; display: flex; gap: 5px; flex-wrap: wrap; }
-.qty-dual-note { margin: 0 20px 14px; padding: 10px 14px; background: #FBF5E6; border-radius: 10px; border-left: 3px solid #C49A3C; font-size: 12px; color: #633806; line-height: 1.5; }
+.qty-dual-note { margin: 0 20px 14px; padding: 10px 14px; background: #EDEAFB; border-radius: 10px; border-left: 3px solid #7B6FCC; font-size: 12px; color: #3C3489; line-height: 1.5; }
 .qty-body { padding: 0 20px; }
 .qty-label { font-size: 13px; color: var(--bark-light); margin-bottom: 8px; }
 .qty-unit-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -488,14 +488,14 @@ body { font-family: var(--font-body); background: var(--cream); color: var(--bar
 
 <script>
 const groups = [
-  { id:'protein-animal', name:'Animal protein', short:'protein', emoji:'🥩', goal:3, color:'#C4714A', faint:'#FAF0EA', tagText:'#712B13' },
-  { id:'protein-veg',    name:'Plant protein',  short:'plant',   emoji:'🫘', goal:2, color:'#7A9E7E', faint:'#EBF2EC', tagText:'#085041' },
-  { id:'dairy',          name:'Dairy',          short:'dairy',   emoji:'🧀', goal:2, color:'#C49A3C', faint:'#FBF5E6', tagText:'#633806' },
-  { id:'fats',           name:'Fats',   short:'fats',    emoji:'🥑', goal:2, color:'#8B5E83', faint:'#F5EEF4', tagText:'#3C3489' },
-  { id:'vegetables',     name:'Vegetables',     short:'veggies', emoji:'🥦', goal:4, color:'#5B8FA8', faint:'#EDF4F8', tagText:'#0C447C' },
-  { id:'fruit',          name:'Fruit',          short:'fruit',   emoji:'🍓', goal:2, color:'#D4537E', faint:'#FBEAF0', tagText:'#72243E' },
-  { id:'carbs',          name:'Carbs',          short:'carbs',   emoji:'🌾', goal:3, color:'#BA7517', faint:'#FAEEDA', tagText:'#633806' },
-  { id:'sweets',         name:'Sweets',         short:'sweets',  emoji:'🍫', goal:1, color:'#888780', faint:'#F1EFE8', tagText:'#444441' },
+  { id:'protein-animal', name:'Animal protein', short:'protein', emoji:'🥩', goal:3, color:'#E88C5A', faint:'#FDF2EB', tagText:'#8C4A20' },
+  { id:'protein-veg',    name:'Plant protein',  short:'plant',   emoji:'🫘', goal:2, color:'#4CAF82', faint:'#E8F7EF', tagText:'#1A6B42' },
+  { id:'dairy',          name:'Dairy',          short:'dairy',   emoji:'🧀', goal:2, color:'#F0B429', faint:'#FEF8E7', tagText:'#7A5A00' },
+  { id:'fats',           name:'Fats',           short:'fats',    emoji:'🥑', goal:2, color:'#7B6FCC', faint:'#EDEAFB', tagText:'#3C3489' },
+  { id:'vegetables',     name:'Vegetables',     short:'veggies', emoji:'🥦', goal:4, color:'#2D9B6F', faint:'#E3F5EE', tagText:'#0F4D35' },
+  { id:'fruit',          name:'Fruit',          short:'fruit',   emoji:'🍓', goal:2, color:'#E86B8C', faint:'#FBEAEF', tagText:'#8C2A4A' },
+  { id:'carbs',          name:'Carbs',          short:'carbs',   emoji:'🌾', goal:3, color:'#E8A040', faint:'#FEF4E3', tagText:'#7A4A00' },
+  { id:'sweets',         name:'Sweets',         short:'sweets',  emoji:'🍫', goal:1, color:'#9B8EA8', faint:'#F2EFF5', tagText:'#4A3D5A' },
 ];
 
 // portions: array of { group, portionSize }
@@ -1040,7 +1040,7 @@ function renderCatFilters() {
     const g = getGroup(p.id);
     const isActive = activeFilter === p.id;
     const bg = isActive ? (g ? g.color : 'var(--bark)') : 'transparent';
-    const col = isActive ? '#FDFAF7' : 'var(--bark-light)';
+    const col = isActive ? '#FFFFFF' : 'var(--bark-light)';
     return `<button class="cat-pill" style="background:${bg};color:${col};border-color:${isActive?'transparent':'var(--bark-faint)'};" onclick="setFilter('${p.id}')">${p.emoji?p.emoji+' ':''}${p.label}</button>`;
   }).join('');
 }
@@ -1512,16 +1512,28 @@ function renderGroupGrid() {
   const el = document.getElementById('group-grid');
   if (!el) return;
   el.innerHTML = groups.filter(g => g.goal > 0).map(g => {
-    const total = groupTotal(g.id);
-    const filled = Math.min(Math.floor(total), g.goal);
-    const done = total >= g.goal;
-    const pips = Array.from({length: g.goal}, (_, i) =>
-      `<div class="tile-pip" style="background:${i < filled ? g.color : 'var(--bark-faint)'};"></div>`
-    ).join('');
+    const total  = groupTotal(g.id);
+    const done   = total >= g.goal;
+    const pct    = Math.min(total / g.goal, 1);
+    const isWhole = Number.isInteger(g.goal) && g.goal <= 6;
+
+    const indicator = isWhole
+      ? `<div class="tile-pips">${Array.from({length: g.goal}, (_, i) => {
+          const fullFilled = i < Math.floor(total);
+          const halfFilled = !fullFilled && (i < total);
+          const bg = fullFilled ? g.color : halfFilled
+            ? `linear-gradient(90deg, ${g.color} 50%, var(--bark-faint) 50%)`
+            : 'var(--bark-faint)';
+          return `<div class="tile-pip" style="background:${bg};"></div>`;
+        }).join('')}</div>`
+      : `<div style="height:5px;border-radius:3px;background:var(--bark-faint);margin-bottom:5px;overflow:hidden;">
+           <div style="height:100%;width:${Math.round(pct*100)}%;background:${g.color};border-radius:3px;transition:width 0.3s;"></div>
+         </div>`;
+
     return `<div class="group-tile${done ? ' done' : ''}" style="--tile-color:${g.color};" onclick="openGroupDetail('${g.id}')">
       <div class="tile-icon" style="background:${g.faint};">${g.emoji}</div>
       <div style="font-size:12px;font-weight:500;color:var(--bark);margin-bottom:6px;line-height:1.2;">${g.name}</div>
-      <div class="tile-pips">${pips}</div>
+      ${indicator}
       <div class="tile-count" style="color:${done ? g.color : 'var(--bark-light)'};">${formatP(total)}/${g.goal}${done ? ' ✓' : ''}</div>
     </div>`;
   }).join('');
@@ -1759,8 +1771,13 @@ function renderConnectedApps() {
 function changeGoal(gid, delta) {
   const g = getGroup(gid);
   if (!g) return;
-  g.goal = Math.max(1, g.goal + delta);
+  g.goal = Math.max(0, Math.round((g.goal + delta) * 2) / 2); // 0.5 steps, min 0
   document.getElementById(`goal-val-${gid}`).textContent = g.goal;
+  // persist goals in user profile
+  const user = JSON.parse(localStorage.getItem('nourish_user') || '{}');
+  if (!user.goals) user.goals = {};
+  user.goals[gid] = g.goal;
+  localStorage.setItem('nourish_user', JSON.stringify(user));
   render();
 }
 
@@ -1774,9 +1791,9 @@ function renderGoalsSettings() {
         <div style="font-size:14px;font-weight:500;color:var(--bark);">${g.name}</div>
       </div>
       <div class="stepper">
-        <button class="stepper-btn" onclick="changeGoal('${g.id}',-1)">−</button>
+        <button class="stepper-btn" onclick="changeGoal('${g.id}',-0.5)">−</button>
         <span class="stepper-val" id="goal-val-${g.id}">${g.goal}</span>
-        <button class="stepper-btn" onclick="changeGoal('${g.id}',1)">+</button>
+        <button class="stepper-btn" onclick="changeGoal('${g.id}',0.5)">+</button>
       </div>
     </div>`).join('');
 }
@@ -1945,65 +1962,200 @@ function setPeriod(p) {
 }
 
 function renderProgress() {
-  const days = activePeriod === 'week' ? 7 : 30;
-  const history = getLogHistory(days);
-  const checkins = getCheckinHistory(days);
+  const days    = activePeriod === 'week' ? 7 : 30;
+  const history = getLogHistory(days).reverse(); // oldest → newest
+  const checkins= getCheckinHistory(days);
+  const activeGroups = groups.filter(g => g.goal > 0);
 
-  // Food goals card
+  // ── Food grid ────────────────────────────────────────────────────────
   const foodEl = document.getElementById('prog-food');
   if (foodEl) {
-    const label = activePeriod === 'week' ? '7 days' : '30 days';
-    foodEl.innerHTML = `<div class="prog-card-label">Goal hit rate · last ${label}</div>` +
-      groups.map(g => {
-        const daysHit = history.filter(d => (d.groupTotals[g.id] || 0) >= g.goal).length;
-        const pct = Math.round((daysHit / days) * 100);
-        const daysWithData = history.filter(d => d.entries.length > 0).length || 1;
-        const hitOfLogged = history.filter(d => d.entries.length > 0 && (d.groupTotals[g.id] || 0) >= g.goal).length;
-        return `<div class="prog-row">
-          <span style="font-size:15px;width:22px;text-align:center;">${g.emoji}</span>
-          <span style="font-size:13px;color:var(--bark);width:82px;flex-shrink:0;">${g.name}</span>
-          <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:${pct}%;background:${g.color};"></div></div>
-          <span class="prog-val">${hitOfLogged}/${daysWithData}d</span>
+    const DAY = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+    const logged = history.filter(d => d.entries.length > 0);
+    const daysWithData = logged.length;
+
+    if (!daysWithData) {
+      foodEl.innerHTML = `<div style="font-size:13px;color:var(--bark-light);padding:8px 0;">No food logged yet — start tracking on the Today tab.</div>`;
+    } else if (activePeriod === 'week') {
+      // Day-by-day dot grid
+      const headers = history.map(d => {
+        const dt = new Date(d.date + 'T12:00:00');
+        const isToday = d.date === todayKey();
+        return `<div style="font-size:10px;color:${isToday?'var(--terracotta)':'var(--bark-light)'};font-weight:${isToday?600:400};text-align:center;">${isToday?'•':DAY[dt.getDay()]}</div>`;
+      }).join('');
+
+      const rows = activeGroups.map(g => {
+        const dots = history.map(d => {
+          const total = d.groupTotals[g.id] || 0;
+          const noData = d.entries.length === 0;
+          const hit    = total >= g.goal;
+          const partial = total > 0 && !hit;
+          const bg = noData ? 'var(--bark-faint)' : hit ? g.color : partial ? g.faint : 'var(--bark-faint)';
+          const opacity = noData ? 0.3 : 1;
+          const border = partial ? `border:1.5px solid ${g.color};` : '';
+          return `<div style="width:26px;height:26px;border-radius:50%;background:${bg};opacity:${opacity};${border}margin:0 auto;"></div>`;
+        }).join('');
+        const hitCount = logged.filter(d => (d.groupTotals[g.id]||0) >= g.goal).length;
+        return `<div style="display:grid;grid-template-columns:20px 76px repeat(${days},1fr);align-items:center;gap:4px;margin-bottom:8px;">
+          <div style="font-size:14px;text-align:center;">${g.emoji}</div>
+          <div style="font-size:12px;color:var(--bark);">${g.name}</div>
+          ${dots}
         </div>`;
       }).join('');
-  }
 
-  // Check-ins card
-  const ciEl = document.getElementById('prog-checkins');
-  if (ciEl) {
-    if (!checkins.length) {
-      ciEl.innerHTML = `<div class="prog-card-label">How you felt</div><div style="font-size:13px;color:var(--bark-light);">No check-ins yet — fill in the daily prompt on Today.</div>`;
+      foodEl.innerHTML = `
+        <div style="display:grid;grid-template-columns:20px 76px repeat(${days},1fr);gap:4px;margin-bottom:10px;">
+          <div></div><div></div>${headers}
+        </div>
+        ${rows}
+        <div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--bark-light);">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--terracotta);"></div>Goal hit
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--bark-light);">
+            <div style="width:10px;height:10px;border-radius:50%;border:1.5px solid var(--terracotta);background:var(--terracotta-faint);"></div>Partial
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--bark-light);">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--bark-faint);opacity:0.3;"></div>No data
+          </div>
+        </div>`;
     } else {
-      const avg = dim => Math.round((checkins.reduce((s,c) => s + (c[dim]||0), 0) / checkins.length) * 10) / 10;
-      const dots = (val, color) => [1,2,3,4,5].map(i =>
-        `<span style="width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:3px;background:${i<=Math.round(val)?color:'var(--bark-faint)'};"></span>`
-      ).join('');
-      ciEl.innerHTML = `<div class="prog-card-label">Average · ${checkins.length} check-ins</div>
-        <div class="prog-row"><span style="font-size:15px;width:22px;">😴</span><span style="font-size:13px;color:var(--bark);width:60px;">Sleep</span><div style="flex:1;">${dots(avg('sleep'),'#5B8FA8')}</div><span class="prog-val">${avg('sleep')}/5</span></div>
-        <div class="prog-row"><span style="font-size:15px;width:22px;">⚡</span><span style="font-size:13px;color:var(--bark);width:60px;">Energy</span><div style="flex:1;">${dots(avg('energy'),'#C49A3C')}</div><span class="prog-val">${avg('energy')}/5</span></div>
-        <div class="prog-row"><span style="font-size:15px;width:22px;">☀️</span><span style="font-size:13px;color:var(--bark);width:60px;">Mood</span><div style="flex:1;">${dots(avg('mood'),'#7A9E7E')}</div><span class="prog-val">${avg('mood')}/5</span></div>`;
+      // Month: bar chart showing weekly hit rates
+      const weeks = [0,1,2,3].map(w => {
+        const slice = history.slice(w*7, w*7+7);
+        return activeGroups.map(g => {
+          const hit = slice.filter(d => d.entries.length > 0 && (d.groupTotals[g.id]||0) >= g.goal).length;
+          const tot = slice.filter(d => d.entries.length > 0).length || 1;
+          return { g, pct: Math.round((hit/tot)*100) };
+        });
+      });
+
+      const weekLabels = [3,2,1,0].map(w => {
+        const d = new Date(); d.setDate(d.getDate() - w*7 - 6);
+        return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      });
+
+      foodEl.innerHTML = activeGroups.map(g => {
+        const total = logged.filter(d => (d.groupTotals[g.id]||0) >= g.goal).length;
+        const pct   = Math.round((total / daysWithData) * 100);
+        return `<div style="margin-bottom:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:13px;color:var(--bark);">${g.emoji} ${g.name}</span>
+            <span style="font-size:12px;color:var(--bark-light);">${total}/${daysWithData} days</span>
+          </div>
+          <div style="height:8px;border-radius:4px;background:var(--bark-faint);overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${g.color};border-radius:4px;transition:width 0.4s;"></div>
+          </div>
+        </div>`;
+      }).join('');
     }
   }
 
-  // Activity card
+  // ── Check-ins ────────────────────────────────────────────────────────
+  const ciEl = document.getElementById('prog-checkins');
+  if (ciEl) {
+    const ciMap = {};
+    checkins.forEach(c => { ciMap[c.date] = c; });
+
+    if (!checkins.length) {
+      ciEl.innerHTML = `<div style="font-size:13px;color:var(--bark-light);">No check-ins yet — fill in the daily prompt on Today.</div>`;
+    } else {
+      const dims = [
+        { key:'sleep',  icon:'😴', label:'Sleep',  color:'#7B6FCC' },
+        { key:'energy', icon:'⚡', label:'Energy', color:'#E8A040' },
+        { key:'mood',   icon:'☀️', label:'Mood',   color:'#4CAF82' },
+      ];
+      const avg = key => {
+        const vals = checkins.map(c => c[key]).filter(Boolean);
+        return vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1) : '–';
+      };
+
+      const dotColor = (val, color) => {
+        if (!val) return 'var(--bark-faint)';
+        const v = parseInt(val);
+        if (v >= 4) return color;
+        if (v === 3) return color + '99';
+        return '#E8CABB';
+      };
+
+      if (activePeriod === 'week') {
+        const DAY = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+        const headers = history.map(d => {
+          const dt = new Date(d.date + 'T12:00:00');
+          const isToday = d.date === todayKey();
+          return `<div style="font-size:10px;color:${isToday?'var(--terracotta)':'var(--bark-light)'};text-align:center;">${isToday?'•':DAY[dt.getDay()]}</div>`;
+        }).join('');
+
+        const rows = dims.map(dim => {
+          const dots = history.map(d => {
+            const val = (ciMap[d.date] || {})[dim.key];
+            const bg = dotColor(val, dim.color);
+            return `<div style="width:26px;height:26px;border-radius:50%;background:${bg};margin:0 auto;display:flex;align-items:center;justify-content:center;">
+              ${val ? `<span style="font-size:9px;color:white;font-weight:600;">${val}</span>` : ''}
+            </div>`;
+          }).join('');
+          return `<div style="display:grid;grid-template-columns:20px 60px repeat(7,1fr);align-items:center;gap:4px;margin-bottom:8px;">
+            <div style="font-size:14px;">${dim.icon}</div>
+            <div style="font-size:12px;color:var(--bark);">${dim.label}</div>
+            ${dots}
+            </div>`;
+        }).join('');
+
+        ciEl.innerHTML = `
+          <div style="display:grid;grid-template-columns:20px 60px repeat(7,1fr);gap:4px;margin-bottom:10px;">
+            <div></div><div></div>${headers}
+          </div>${rows}
+          <div style="font-size:12px;color:var(--bark-light);margin-top:4px;">Numbers show your 1–5 rating. Darker = better.</div>`;
+      } else {
+        ciEl.innerHTML = dims.map(dim => {
+          const a = avg(dim.key);
+          const pct = a !== '–' ? Math.round((parseFloat(a)/5)*100) : 0;
+          return `<div style="margin-bottom:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-size:13px;color:var(--bark);">${dim.icon} ${dim.label}</span>
+              <span style="font-size:12px;color:var(--bark-light);">${a}/5 avg</span>
+            </div>
+            <div style="height:8px;border-radius:4px;background:var(--bark-faint);overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${dim.color};border-radius:4px;"></div>
+            </div>
+          </div>`;
+        }).join('');
+      }
+    }
+  }
+
+  // ── Activity ─────────────────────────────────────────────────────────
   const actEl = document.getElementById('prog-activity-body');
   if (actEl) {
     const token = localStorage.getItem('strava_token');
     if (!token) {
-      actEl.textContent = 'Connect Strava in Settings to see activity here.';
+      actEl.innerHTML = `<div style="font-size:13px;color:var(--bark-light);">Connect Strava in Settings to see activity here.</div>`;
     } else if (stravaActivities.length) {
-      actEl.innerHTML = stravaActivities.map(a => {
-        const emoji = activityEmoji[a.type] || '💪';
-        const parts = [fmtDur(a.moving_time)];
-        if (a.distance > 100) parts.push(fmtDist(a.distance));
-        return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bark-faint);">
-          <span style="font-size:16px;">${emoji}</span>
-          <span style="font-size:13px;color:var(--bark);flex:1;">${a.name}</span>
-          <span style="font-size:12px;color:var(--bark-light);">${parts.join(' · ')}</span>
-        </div>`;
-      }).join('') + `<div style="font-size:12px;color:var(--bark-light);margin-top:8px;">Showing today's activities from Strava.</div>`;
+      const totalSecs = stravaActivities.reduce((s,a) => s + (a.moving_time||0), 0);
+      const totalDist = stravaActivities.reduce((s,a) => s + (a.distance||0), 0);
+      actEl.innerHTML = `
+        <div style="display:flex;gap:12px;margin-bottom:12px;">
+          <div style="flex:1;background:var(--sky-faint);border-radius:10px;padding:10px;text-align:center;">
+            <div style="font-size:18px;font-weight:600;color:var(--sky);">${fmtDur(totalSecs)}</div>
+            <div style="font-size:11px;color:var(--bark-light);">active time today</div>
+          </div>
+          ${totalDist > 100 ? `<div style="flex:1;background:var(--terracotta-faint);border-radius:10px;padding:10px;text-align:center;">
+            <div style="font-size:18px;font-weight:600;color:var(--terracotta);">${fmtDist(totalDist)}</div>
+            <div style="font-size:11px;color:var(--bark-light);">distance today</div>
+          </div>` : ''}
+        </div>
+        ${stravaActivities.map(a => {
+          const emoji = activityEmoji[a.type] || '💪';
+          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bark-faint);">
+            <span style="font-size:18px;">${emoji}</span>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;color:var(--bark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.name}</div>
+              <div style="font-size:11px;color:var(--bark-light);">${fmtDur(a.moving_time)}${a.distance>100?' · '+fmtDist(a.distance):''}</div>
+            </div>
+          </div>`;
+        }).join('')}`;
     } else {
-      actEl.textContent = 'No activities logged today via Strava.';
+      actEl.innerHTML = `<div style="font-size:13px;color:var(--bark-light);">Rest day — no Strava activity today.</div>`;
     }
   }
 }
@@ -2031,27 +2183,27 @@ function renderInsights() {
     const rate = daysLogged ? daysHit / daysLogged : 0;
 
     if (g.id === 'vegetables' && rate < 0.5 && daysLogged >= 2) {
-      cards.push({ icon:'🥦', type:'food', color:'#5B8FA8', bg:'#EDF4F8',
+      cards.push({ icon:'🥦', type:'food', color:'#2D9B6F', bg:'#E3F5EE',
         title: 'Vegetables are often below goal',
         body: `You hit your vegetable goal ${daysHit} of ${daysLogged} days logged. Vegetables are your richest source of fiber, antioxidants, and micronutrients. Even small additions — a handful of spinach, some roasted zucchini — add up quickly.` });
     }
     if (g.id === 'vegetables' && rate >= 0.8 && daysLogged >= 3) {
-      cards.push({ icon:'🥦', type:'positive', color:'#7A9E7E', bg:'#EBF2EC',
+      cards.push({ icon:'🥦', type:'positive', color:'#4CAF82', bg:'#E8F7EF',
         title: 'Strong vegetable consistency',
         body: `You've hit your vegetable goal ${daysHit} of ${daysLogged} days. This is one of the highest-impact habits for long-term health — keep it going.` });
     }
     if (g.id === 'protein-animal' && rate >= 0.85 && daysLogged >= 3) {
-      cards.push({ icon:'🥩', type:'positive', color:'#C4714A', bg:'#FAF0EA',
+      cards.push({ icon:'🥩', type:'positive', color:'#E88C5A', bg:'#FDF2EB',
         title: 'Solid protein habit',
         body: `Your animal protein goal has been met ${daysHit} of ${daysLogged} days. Consistent protein intake supports muscle maintenance, satiety, and steady energy.` });
     }
     if (g.id === 'fruit' && rate < 0.4 && daysLogged >= 3) {
-      cards.push({ icon:'🍓', type:'food', color:'#D4537E', bg:'#FBEAF0',
+      cards.push({ icon:'🍓', type:'food', color:'#E86B8C', bg:'#FBEAEF',
         title: 'Fruit intake has been low',
         body: `Fruit provides natural sugars, fiber, and antioxidants that differ from vegetables. Even 1–2 pieces a day — an apple, some berries — adds meaningful nutritional variety.` });
     }
     if (g.id === 'fats' && rate < 0.4 && daysLogged >= 3) {
-      cards.push({ icon:'🥑', type:'supplement', color:'#8B5E83', bg:'#F5EEF4',
+      cards.push({ icon:'🥑', type:'supplement', color:'#7B6FCC', bg:'#EDEAFB',
         title: 'Dietary fats are often low',
         body: `Healthy fats are essential for hormone production, brain function, and absorbing fat-soluble vitamins (A, D, E, K). Try adding avocado, olive oil, or a small handful of nuts.`,
         supp: { title:'Consider: Omega-3 (if oily fish is rarely eaten)', body:`Look for fish oil or algae-based Omega-3 with at least <strong>500mg combined EPA+DHA</strong> per serving. Algae-based is a good option if you prefer plant-derived. Check for third-party testing (IFOS or NSF certification).` }
@@ -2066,20 +2218,20 @@ function renderInsights() {
     const energyAvg = avg('energy');
 
     if (sleepAvg < 2.8) {
-      cards.push({ icon:'😴', type:'supplement', color:'#5B8FA8', bg:'#EDF4F8',
+      cards.push({ icon:'😴', type:'supplement', color:'#7B6FCC', bg:'#EDEAFB',
         title: 'Sleep has been rough lately',
         body: `Your average sleep rating is ${sleepAvg.toFixed(1)}/5 over the last ${checkins.length} check-ins. Poor sleep affects hunger hormones, mood, and recovery. Consistent sleep and wake times — even on weekends — tend to help more than any supplement.`,
         supp: { title:'Worth exploring: Magnesium glycinate', body:`Magnesium glycinate is the most well-studied form for sleep quality. Look for products with <strong>200–400mg elemental magnesium</strong>, taken 30–60 min before bed. Avoid magnesium oxide — it's poorly absorbed. Check for third-party testing (USP or NSF).` }
       });
     } else if (sleepAvg < 3.5) {
-      cards.push({ icon:'😴', type:'lifestyle', color:'#5B8FA8', bg:'#EDF4F8',
+      cards.push({ icon:'😴', type:'lifestyle', color:'#7B6FCC', bg:'#EDEAFB',
         title: 'Sleep quality is moderate',
         body: `Your average sleep rating is ${sleepAvg.toFixed(1)}/5. Some factors that reliably improve sleep quality: limiting screens in the last hour, keeping the room cool, and avoiding caffeine after 2pm.` });
     }
 
     if (energyAvg < 2.8) {
       const vegRate = history.filter(d => d.entries.length>0 && (d.groupTotals['vegetables']||0) >= getGroup('vegetables').goal).length / Math.max(daysWithData,1);
-      cards.push({ icon:'⚡', type:'supplement', color:'#C49A3C', bg:'#FBF5E6',
+      cards.push({ icon:'⚡', type:'supplement', color:'#E8A040', bg:'#FEF4E3',
         title: 'Energy has been consistently low',
         body: `Your average energy rating is ${energyAvg.toFixed(1)}/5. Low energy often tracks with disrupted sleep, low iron intake, or insufficient carbohydrates — especially on active days.${vegRate<0.5?' Low vegetable intake may also be reducing your micronutrient intake.':''}`,
         supp: { title:'Consider: Vitamin D (if rarely outdoors)', body:`Vitamin D deficiency is extremely common and directly linked to fatigue and low mood. Look for <strong>Vitamin D3 (not D2)</strong>, ideally paired with K2 for absorption. 1,000–2,000 IU daily is a common maintenance dose — a blood test can confirm if you're deficient.` }
@@ -2089,7 +2241,7 @@ function renderInsights() {
     // Cross: poor sleep + low fats (omega-3)
     const fatRate = history.filter(d => d.entries.length>0 && (d.groupTotals['fats']||0) >= getGroup('fats').goal).length / Math.max(daysWithData,1);
     if (sleepAvg < 3.2 && fatRate < 0.4 && !cards.find(c => c.supp?.title?.includes('Omega'))) {
-      cards.push({ icon:'🐟', type:'supplement', color:'#5B8FA8', bg:'#EDF4F8',
+      cards.push({ icon:'🐟', type:'supplement', color:'#2D9B6F', bg:'#E3F5EE',
         title: 'Low dietary fat + poor sleep — Omega-3 may help',
         body: `Omega-3 fatty acids (especially DHA) play a role in brain function and sleep regulation. When dietary fat intake is low and sleep is poor, it's worth considering.`,
         supp: { title:'What to look for in an Omega-3 supplement', body:`Choose a product with at least <strong>500mg combined EPA+DHA per serving</strong>. Look for "triglyceride form" on the label — it absorbs better than ethyl ester form. IFOS or NSF certification means the oil has been tested for purity and oxidation.` }
@@ -2102,7 +2254,7 @@ function renderInsights() {
     const todayCarbs = history[0].groupTotals['carbs'] || 0;
     const carbGoal   = getGroup('carbs').goal;
     if (todayCarbs < carbGoal * 0.7) {
-      cards.push({ icon:'🏃', type:'food', color:'#BA7517', bg:'#FAEEDA',
+      cards.push({ icon:'🏃', type:'food', color:'#E8A040', bg:'#FEF4E3',
         title: 'Active day, but carbs were low',
         body: `You logged a workout today but your carbohydrate intake was below goal. Carbs are your muscles' primary fuel source and key to recovery after exercise. A portion of oats, rice, or sweet potato post-workout makes a real difference.` });
     }
@@ -2122,7 +2274,7 @@ function renderInsights() {
 
   // ── Render cards ─────────────────────────────────────────────────
   const typeLabel = { food:'Food pattern', positive:'Going well', lifestyle:'Lifestyle', supplement:'Supplement note', learn:'Worth knowing' };
-  const typeColor = { food:'var(--bark)', positive:'#7A9E7E', lifestyle:'var(--sky)', supplement:'#8B5E83', learn:'var(--bark-light)' };
+  const typeColor = { food:'var(--bark)', positive:'#4CAF82', lifestyle:'var(--sky)', supplement:'#7B6FCC', learn:'var(--bark-light)' };
 
   el.innerHTML = cards.map(c => `
     <div class="insight-card" style="border-left:3px solid ${c.color};">
