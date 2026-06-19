@@ -194,6 +194,43 @@ body { font-family: var(--font-body); background: var(--cream); color: var(--bar
 .prog-dots { display: flex; gap: 3px; }
 .prog-dot { width: 9px; height: 9px; border-radius: 50%; }
 
+/* ── Onboarding ── */
+.ob-overlay { position:fixed; inset:0; background:var(--cream); z-index:999; display:flex; flex-direction:column; overflow:hidden; max-width:430px; margin:0 auto; }
+.ob-overlay.hidden { display:none; }
+.ob-progress { display:flex; gap:6px; padding:20px 24px 0; }
+.ob-pip { height:4px; border-radius:2px; flex:1; background:var(--bark-faint); transition:background 0.3s; }
+.ob-pip.done { background:var(--terracotta); }
+.ob-body { flex:1; overflow-y:auto; padding:32px 24px 16px; display:flex; flex-direction:column; }
+.ob-back { background:none; border:none; color:var(--bark-light); font-size:22px; cursor:pointer; padding:0; width:32px; height:32px; display:flex; align-items:center; justify-content:center; margin-bottom:24px; }
+.ob-title { font-family:var(--font-display); font-size:26px; color:var(--bark); line-height:1.3; margin-bottom:8px; }
+.ob-sub { font-size:14px; color:var(--bark-light); line-height:1.5; margin-bottom:32px; }
+.ob-input { width:100%; padding:15px 16px; border-radius:14px; border:1.5px solid var(--bark-faint); background:var(--warm-white); font-family:var(--font-body); font-size:17px; color:var(--bark); outline:none; box-sizing:border-box; transition:border-color 0.2s; }
+.ob-input:focus { border-color:var(--terracotta-light); }
+.ob-input-row { display:flex; gap:10px; margin-bottom:20px; }
+.ob-input-wrap { flex:1; display:flex; flex-direction:column; gap:6px; }
+.ob-label { font-size:12px; font-weight:500; color:var(--bark-light); letter-spacing:0.3px; }
+.ob-unit-toggle { display:flex; border-radius:10px; overflow:hidden; border:1.5px solid var(--bark-faint); background:var(--warm-white); }
+.ob-unit-btn { flex:1; padding:8px 4px; border:none; background:transparent; font-family:var(--font-body); font-size:12px; color:var(--bark-light); cursor:pointer; transition:all 0.2s; }
+.ob-unit-btn.active { background:var(--bark); color:var(--warm-white); }
+.ob-options { display:flex; flex-direction:column; gap:10px; }
+.ob-option { padding:16px 18px; border-radius:16px; border:1.5px solid var(--bark-faint); background:var(--warm-white); cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:14px; -webkit-tap-highlight-color:transparent; }
+.ob-option.selected { border-color:var(--terracotta); background:var(--terracotta-faint); }
+.ob-option-icon { font-size:22px; width:36px; text-align:center; flex-shrink:0; }
+.ob-option-text { flex:1; }
+.ob-option-title { font-size:15px; font-weight:500; color:var(--bark); }
+.ob-option-desc { font-size:12px; color:var(--bark-light); margin-top:2px; line-height:1.4; }
+.ob-sex-row { display:flex; gap:10px; margin-bottom:24px; }
+.ob-sex-btn { flex:1; padding:16px; border-radius:16px; border:1.5px solid var(--bark-faint); background:var(--warm-white); cursor:pointer; text-align:center; font-family:var(--font-body); font-size:15px; font-weight:500; color:var(--bark); transition:all 0.2s; }
+.ob-sex-btn.selected { border-color:var(--terracotta); background:var(--terracotta-faint); color:var(--terracotta); }
+.ob-footer { padding:16px 24px 36px; flex-shrink:0; }
+.ob-btn { width:100%; padding:17px; border-radius:16px; border:none; background:var(--terracotta); color:var(--warm-white); font-family:var(--font-body); font-size:16px; font-weight:600; cursor:pointer; transition:opacity 0.2s; }
+.ob-btn:disabled { opacity:0.4; cursor:default; }
+.ob-summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
+.ob-summary-tile { background:var(--warm-white); border-radius:14px; padding:14px 12px; border:1px solid var(--bark-faint); text-align:center; }
+.ob-summary-emoji { font-size:20px; margin-bottom:4px; }
+.ob-summary-name { font-size:11px; color:var(--bark-light); margin-bottom:4px; }
+.ob-summary-val { font-size:18px; font-weight:600; color:var(--bark); }
+
 /* ── Group grid ── */
 .group-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
 .group-tile { background: var(--warm-white); border-radius: var(--radius); border: 1.5px solid var(--bark-faint); padding: 14px 12px 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; text-align: center; transition: border-color 0.2s; -webkit-tap-highlight-color: transparent; }
@@ -227,6 +264,15 @@ body { font-family: var(--font-body); background: var(--cream); color: var(--bar
 </style>
 </head>
 <body>
+
+<!-- ── Onboarding overlay ── -->
+<div class="ob-overlay" id="ob-overlay">
+  <div class="ob-progress" id="ob-progress"></div>
+  <div class="ob-body" id="ob-body"></div>
+  <div class="ob-footer">
+    <button class="ob-btn" id="ob-btn" onclick="obNext()">Continue</button>
+  </div>
+</div>
 
 <div class="header">
   <div class="header-top">
@@ -292,7 +338,10 @@ body { font-family: var(--font-body); background: var(--cream); color: var(--bar
 <!-- ── Settings screen ── -->
 <div id="screen-settings" style="display:none; padding:18px 16px 130px;">
 
-  <div class="settings-title" style="margin-top:0;">Connected apps</div>
+  <div class="settings-title" style="margin-top:0;">Your profile</div>
+  <div id="settings-profile-card" style="background:var(--warm-white);border-radius:var(--radius);border:1px solid var(--bark-faint);padding:16px;margin-bottom:20px;"></div>
+
+  <div class="settings-title">Connected apps</div>
 
   <!-- Strava -->
   <div class="conn-card">
@@ -1462,7 +1511,7 @@ function render() { renderGroups(); renderGroupGrid(); renderSummary(); saveToda
 function renderGroupGrid() {
   const el = document.getElementById('group-grid');
   if (!el) return;
-  el.innerHTML = groups.map(g => {
+  el.innerHTML = groups.filter(g => g.goal > 0).map(g => {
     const total = groupTotal(g.id);
     const filled = Math.min(Math.floor(total), g.goal);
     const done = total >= g.goal;
@@ -1735,6 +1784,43 @@ function renderGoalsSettings() {
 function renderSettings() {
   renderConnectedApps();
   renderGoalsSettings();
+  renderProfileCard();
+}
+
+function renderProfileCard() {
+  const el = document.getElementById('settings-profile-card');
+  if (!el) return;
+  const user = JSON.parse(localStorage.getItem('nourish_user') || 'null');
+  if (!user) {
+    el.innerHTML = `<div style="font-size:13px;color:var(--bark-light);">No profile found.</div>`;
+    return;
+  }
+  const goalLabels = { balanced:'Eat more balanced', strength:'Build strength', plants:'Eat more plants', lighter:'Feel lighter' };
+  const actLabels  = { sedentary:'Mostly sedentary', moderate:'Moderately active', active:'Very active' };
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--terracotta-faint);border:1.5px solid var(--terracotta-light);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:var(--terracotta);">${user.name[0].toUpperCase()}</div>
+        <div>
+          <div style="font-size:16px;font-weight:600;color:var(--bark);">${user.name}</div>
+          <div style="font-size:12px;color:var(--bark-light);">${user.age} yrs · ${user.sex === 'male' ? 'Male' : 'Female'}</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+      <span style="font-size:12px;padding:4px 10px;border-radius:20px;background:var(--terracotta-faint);color:var(--terracotta);">${goalLabels[user.goal] || user.goal}</span>
+      <span style="font-size:12px;padding:4px 10px;border-radius:20px;background:var(--sky-faint);color:var(--sky);">${actLabels[user.activity] || user.activity}</span>
+    </div>
+    <button onclick="resetProfile()" style="font-size:13px;color:var(--bark-light);background:none;border:1px solid var(--bark-faint);border-radius:10px;padding:8px 14px;cursor:pointer;font-family:var(--font-body);">Edit profile & retake onboarding</button>`;
+}
+
+function resetProfile() {
+  if (!confirm('This will clear your profile and restart onboarding. Your food log will be kept.')) return;
+  localStorage.removeItem('nourish_user');
+  obStep = 0;
+  obData = { name:'', sex:'', age:'', heightCm:'', weightKg:'', heightUnit:'cm', weightUnit:'kg', diet:'omnivore', activity:'', goal:'' };
+  document.getElementById('ob-overlay').classList.remove('hidden');
+  obRender();
 }
 
 // ── localStorage persistence ─────────────────────────────────────────
@@ -2089,15 +2175,269 @@ async function handleOAuthCallback() {
   }
 }
 
-// ── Init ─────────────────────────────────────────────────────────────
-// Load today's saved log if it exists, otherwise seed with sample data
-const _hasSavedLog = !!localStorage.getItem(`nourish_log_${todayKey()}`);
-if (_hasSavedLog) { loadTodayLog(); } else { seedLogs(); }
+// ── Onboarding ───────────────────────────────────────────────────────
+const OB_STEPS = ['name','bio','body','activity','goal','summary'];
+let obStep = 0;
+let obData = { name:'', sex:'', age:'', heightCm:'', weightKg:'', heightUnit:'cm', weightUnit:'kg', diet:'omnivore', activity:'', goal:'' };
 
-document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
-render();
-renderWater();
-maybeShowCheckin();
+function obRender() {
+  const total = OB_STEPS.length;
+  const step  = OB_STEPS[obStep];
+
+  // Progress pips
+  document.getElementById('ob-progress').innerHTML = OB_STEPS.slice(0,-1).map((_,i) =>
+    `<div class="ob-pip${i < obStep ? ' done' : ''}"></div>`
+  ).join('');
+
+  const btn = document.getElementById('ob-btn');
+  btn.textContent = step === 'summary' ? "Let's go 🌿" : 'Continue';
+  btn.disabled = !obCanContinue();
+
+  const back = obStep > 0 && step !== 'summary'
+    ? `<button class="ob-back" onclick="obBack()">←</button>` : '';
+
+  let html = '';
+  if (step === 'name') {
+    html = `
+      ${back}
+      <div class="ob-title">Welcome to<br><em>nourish</em> 🌿</div>
+      <div class="ob-sub">A simple, judgment-free way to track how you eat. Let's set up your personal plan — it takes about a minute.</div>
+      <div class="ob-label">Your name</div>
+      <input class="ob-input" id="ob-name" type="text" placeholder="e.g. Maria" autocomplete="given-name" value="${obData.name}"
+        oninput="obData.name=this.value.trim();document.getElementById('ob-btn').disabled=!obCanContinue();" />`;
+  }
+  else if (step === 'bio') {
+    const diets = [
+      { id:'omnivore',    label:'🥩 Omnivore',    desc:'I eat meat, fish, and animal products' },
+      { id:'vegetarian',  label:'🥗 Vegetarian',  desc:'No meat or fish, but dairy and eggs are fine' },
+      { id:'vegan',       label:'🌱 Vegan',        desc:'Fully plant-based' },
+    ];
+    html = `
+      ${back}
+      <div class="ob-title">A bit about you</div>
+      <div class="ob-sub">Used to set your targets — never shown to anyone.</div>
+      <div class="ob-label" style="margin-bottom:8px;">Biological sex</div>
+      <div class="ob-sex-row">
+        <button class="ob-sex-btn${obData.sex==='female'?' selected':''}" onclick="obData.sex='female';obRender();">Female</button>
+        <button class="ob-sex-btn${obData.sex==='male'?' selected':''}" onclick="obData.sex='male';obRender();">Male</button>
+      </div>
+      <div class="ob-label" style="margin-bottom:8px;">Age</div>
+      <input class="ob-input" id="ob-age" type="number" placeholder="e.g. 28" min="12" max="99" value="${obData.age}"
+        oninput="obData.age=this.value;document.getElementById('ob-btn').disabled=!obCanContinue();" style="margin-bottom:20px;" />
+      <div class="ob-label" style="margin-bottom:8px;">Diet</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${diets.map(d => `
+          <div class="ob-option${obData.diet===d.id?' selected':''}" onclick="obData.diet='${d.id}';obRender();" style="padding:12px 14px;">
+            <div class="ob-option-text">
+              <div class="ob-option-title">${d.label}</div>
+              <div class="ob-option-desc">${d.desc}</div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }
+  else if (step === 'body') {
+    const hLabel = obData.heightUnit === 'cm' ? 'cm' : 'ft';
+    const wLabel = obData.weightUnit === 'kg' ? 'kg' : 'lbs';
+    const hVal   = obData.heightUnit === 'cm' ? (obData.heightCm || '') : (obData.heightCm ? Math.round(obData.heightCm / 30.48 * 10)/10 : '');
+    const wVal   = obData.weightUnit === 'kg' ? (obData.weightKg || '') : (obData.weightKg ? Math.round(obData.weightKg * 2.20462 * 10)/10 : '');
+    html = `
+      ${back}
+      <div class="ob-title">Height & weight</div>
+      <div class="ob-sub">Helps estimate how much energy your body needs each day.</div>
+      <div class="ob-input-row">
+        <div class="ob-input-wrap">
+          <div class="ob-label">Height</div>
+          <input class="ob-input" id="ob-height" type="number" placeholder="${obData.heightUnit==='cm'?'e.g. 165':'e.g. 5.4'}" step="0.1" value="${hVal}"
+            oninput="obSetHeight(this.value)" />
+          <div class="ob-unit-toggle" style="margin-top:6px;">
+            <button class="ob-unit-btn${obData.heightUnit==='cm'?' active':''}" onclick="obSetHeightUnit('cm')">cm</button>
+            <button class="ob-unit-btn${obData.heightUnit==='ft'?' active':''}" onclick="obSetHeightUnit('ft')">ft</button>
+          </div>
+        </div>
+        <div class="ob-input-wrap">
+          <div class="ob-label">Weight</div>
+          <input class="ob-input" id="ob-weight" type="number" placeholder="${obData.weightUnit==='kg'?'e.g. 65':'e.g. 143'}" step="0.1" value="${wVal}"
+            oninput="obSetWeight(this.value)" />
+          <div class="ob-unit-toggle" style="margin-top:6px;">
+            <button class="ob-unit-btn${obData.weightUnit==='kg'?' active':''}" onclick="obSetWeightUnit('kg')">kg</button>
+            <button class="ob-unit-btn${obData.weightUnit==='lbs'?' active':''}" onclick="obSetWeightUnit('lbs')">lbs</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  else if (step === 'activity') {
+    const opts = [
+      { id:'sedentary', icon:'🪑', title:'Mostly sitting', desc:'Desk job, light walking, little exercise' },
+      { id:'moderate',  icon:'🚶', title:'Moderately active', desc:'Some exercise 3–4×/week or active job' },
+      { id:'active',    icon:'🏃', title:'Very active', desc:'Hard training most days or physical job' },
+    ];
+    html = `
+      ${back}
+      <div class="ob-title">How active are you?</div>
+      <div class="ob-sub">On a typical week.</div>
+      <div class="ob-options">
+        ${opts.map(o => `
+          <div class="ob-option${obData.activity===o.id?' selected':''}" onclick="obData.activity='${o.id}';obRender();">
+            <div class="ob-option-icon">${o.icon}</div>
+            <div class="ob-option-text">
+              <div class="ob-option-title">${o.title}</div>
+              <div class="ob-option-desc">${o.desc}</div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }
+  else if (step === 'goal') {
+    const opts = [
+      { id:'balanced',  icon:'⚖️',  title:'Eat more balanced', desc:'Build a sustainable, varied diet' },
+      { id:'strength',  icon:'💪',  title:'Build strength', desc:'More protein to support muscle and training' },
+      { id:'plants',    icon:'🥦',  title:'Eat more plants', desc:'Shift toward plant-based eating' },
+      { id:'lighter',   icon:'🍃',  title:'Feel lighter', desc:'Reduce portions moderately and eat cleaner' },
+    ];
+    html = `
+      ${back}
+      <div class="ob-title">What's your main goal?</div>
+      <div class="ob-sub">This shapes how your daily portions are distributed.</div>
+      <div class="ob-options">
+        ${opts.map(o => `
+          <div class="ob-option${obData.goal===o.id?' selected':''}" onclick="obData.goal='${o.id}';obRender();">
+            <div class="ob-option-icon">${o.icon}</div>
+            <div class="ob-option-text">
+              <div class="ob-option-title">${o.title}</div>
+              <div class="ob-option-desc">${o.desc}</div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }
+  else if (step === 'summary') {
+    const goals = calcPortionGoals(obData);
+    obData.goals = goals;
+    html = `
+      <div class="ob-title">Your daily targets,<br>${obData.name} 🎯</div>
+      <div class="ob-sub">Based on your profile. You can adjust these anytime in Settings.</div>
+      <div class="ob-summary-grid">
+        ${groups.filter(g => goals[g.id] > 0).map(g => `
+          <div class="ob-summary-tile">
+            <div class="ob-summary-emoji">${g.emoji}</div>
+            <div class="ob-summary-name">${g.name}</div>
+            <div class="ob-summary-val" style="color:${g.color};">${goals[g.id]} <span style="font-size:12px;font-weight:400;color:var(--bark-light);">portions</span></div>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  document.getElementById('ob-body').innerHTML = html;
+  if (step === 'name') setTimeout(() => document.getElementById('ob-name')?.focus(), 100);
+}
+
+function obCanContinue() {
+  const step = OB_STEPS[obStep];
+  if (step === 'name')     return obData.name.length > 0;
+  if (step === 'bio')      return obData.sex && obData.age >= 12;
+  if (step === 'body')     return obData.heightCm > 0 && obData.weightKg > 0;
+  if (step === 'activity') return !!obData.activity;
+  if (step === 'goal')     return !!obData.goal;
+  return true;
+}
+
+function obNext() {
+  if (!obCanContinue()) return;
+  if (OB_STEPS[obStep] === 'summary') { obFinish(); return; }
+  obStep++;
+  obRender();
+}
+
+function obBack() {
+  if (obStep > 0) { obStep--; obRender(); }
+}
+
+function obSetHeight(val) {
+  obData.heightCm = obData.heightUnit === 'cm' ? parseFloat(val) : parseFloat(val) * 30.48;
+  document.getElementById('ob-btn').disabled = !obCanContinue();
+}
+function obSetHeightUnit(u) { obData.heightUnit = u; obRender(); }
+function obSetWeight(val) {
+  obData.weightKg = obData.weightUnit === 'kg' ? parseFloat(val) : parseFloat(val) / 2.20462;
+  document.getElementById('ob-btn').disabled = !obCanContinue();
+}
+function obSetWeightUnit(u) { obData.weightUnit = u; obRender(); }
+
+function calcPortionGoals(profile) {
+  const { sex, age, weightKg, heightCm, activity, goal, diet } = profile;
+
+  // BMR (Mifflin-St Jeor)
+  const bmr = sex === 'male'
+    ? 10 * weightKg + 6.25 * heightCm - 5 * age + 5
+    : 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
+
+  const actMult  = { sedentary:1.2, moderate:1.375, active:1.55 }[activity] || 1.375;
+  const goalMult = { balanced:1.0, strength:1.05, plants:1.0, lighter:0.85 }[goal] || 1.0;
+  const target   = bmr * actMult * goalMult; // kcal/day
+
+  // Rates per 1000 kcal — calibrated so a person eating ~2500 kcal in slight
+  // deficit lands around: 3-4 animal protein, 3-4 fat, 3 carbs, 3 veg, 3 fruit
+  const rates = {
+    balanced: { animal:1.4, dairy:0.6, fats:1.5, carbs:1.4, veg:1.5, fruit:1.0, sweets:0.4 },
+    strength: { animal:2.0, dairy:0.6, fats:1.3, carbs:1.3, veg:1.5, fruit:0.8, sweets:0.2 },
+    lighter:  { animal:1.5, dairy:0.3, fats:1.7, carbs:1.1, veg:1.3, fruit:1.2, sweets:0.2 },
+    plants:   { animal:1.4, dairy:0.6, fats:1.5, carbs:1.5, veg:2.0, fruit:1.2, sweets:0.4 },
+  }[goal] || { animal:1.4, dairy:0.6, fats:1.5, carbs:1.4, veg:1.5, fruit:1.0, sweets:0.4 };
+
+  const k   = target / 1000;
+  const cl  = (v, mn, mx) => Math.min(Math.max(Math.round(v), mn), mx);
+
+  const isVeg  = diet === 'vegetarian' || diet === 'vegan';
+  const isVegan = diet === 'vegan';
+
+  // Plant protein replaces animal for veg/vegan (compensate for lower kcal/portion: 200 vs 120)
+  const animalPortions = isVeg ? 0 : cl(rates.animal * k, 1, 6);
+  const plantPortions  = isVeg ? cl(rates.animal * k * (200/120), 1, 8) : 0;
+  const dairyPortions  = isVegan ? 0 : cl(rates.dairy * k, 1, 3);
+
+  return {
+    'protein-animal': animalPortions,
+    'protein-veg':    plantPortions,
+    'dairy':          dairyPortions,
+    'fats':           cl(rates.fats * k, 1, 6),
+    'vegetables':     cl(rates.veg  * k, 2, 6),
+    'fruit':          cl(rates.fruit * k, 1, 4),
+    'carbs':          cl(rates.carbs * k, 1, 6),
+    'sweets':         cl(rates.sweets * k, 0, 2),
+  };
+}
+
+function obFinish() {
+  const user = { ...obData, createdAt: new Date().toISOString() };
+  localStorage.setItem('nourish_user', JSON.stringify(user));
+  applyUserProfile(user);
+  document.getElementById('ob-overlay').classList.add('hidden');
+  render(); renderWater(); maybeShowCheckin();
+}
+
+function applyUserProfile(user) {
+  // Update avatar initials
+  const av = document.querySelector('.avatar');
+  if (av && user.name) av.textContent = user.name[0].toUpperCase();
+  // Apply portion goals to groups
+  if (user.goals) {
+    groups.forEach(g => { if (user.goals[g.id] !== undefined) g.goal = user.goals[g.id]; });
+  }
+}
+
+// ── Init ─────────────────────────────────────────────────────────────
+const _existingUser = JSON.parse(localStorage.getItem('nourish_user') || 'null');
+
+if (_existingUser) {
+  // Returning user — skip onboarding
+  document.getElementById('ob-overlay').classList.add('hidden');
+  applyUserProfile(_existingUser);
+  const _hasSavedLog = !!localStorage.getItem(`nourish_log_${todayKey()}`);
+  if (_hasSavedLog) { loadTodayLog(); }
+  document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  render(); renderWater(); maybeShowCheckin();
+} else {
+  // New user — show onboarding
+  document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  obRender();
+}
 
 // Restore Strava session
 const _savedToken   = localStorage.getItem('strava_token');
