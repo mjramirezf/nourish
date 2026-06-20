@@ -231,6 +231,20 @@ body { font-family: var(--font-body); background: var(--cream); color: var(--bar
 .ob-summary-name { font-size:11px; color:var(--bark-light); margin-bottom:4px; }
 .ob-summary-val { font-size:18px; font-weight:600; color:var(--bark); }
 
+/* ── Camera ── */
+.camera-btns { display:flex; gap:8px; padding:0 16px 12px; }
+.camera-btn { flex:1; display:flex; align-items:center; justify-content:center; gap:7px; padding:11px 8px; border-radius:12px; border:1.5px solid var(--bark-faint); background:var(--cream); font-family:var(--font-body); font-size:13px; font-weight:500; color:var(--bark); cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.camera-btn:active { opacity:0.7; }
+.photo-sheet { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; background:var(--warm-white); border-radius:20px 20px 0 0; z-index:230; display:none; flex-direction:column; max-height:85vh; padding-bottom:32px; }
+.photo-sheet.open { display:flex; animation:slideUp 0.26s cubic-bezier(0.32,0.72,0,1); }
+.photo-preview { width:100%; max-height:220px; object-fit:cover; border-radius:0; display:none; }
+.photo-item-row { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--bark-faint); }
+.photo-item-name { font-size:14px; font-weight:500; color:var(--bark); margin-bottom:2px; }
+.photo-item-qty { font-size:12px; color:var(--bark-light); }
+.camera-spinner { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:48px 24px; gap:14px; }
+.spinner-ring { width:36px; height:36px; border:3px solid var(--bark-faint); border-top-color:var(--terracotta); border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
 /* ── Group grid ── */
 .group-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
 .group-tile { background: var(--warm-white); border-radius: var(--radius); border: 1.5px solid var(--bark-faint); padding: 14px 12px 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; text-align: center; transition: border-color 0.2s; -webkit-tap-highlight-color: transparent; }
@@ -392,6 +406,15 @@ body { font-family: var(--font-body); background: var(--cream); color: var(--bar
   <div class="settings-title">Daily portion goals</div>
   <div id="goals-settings"></div>
 
+  <div class="settings-title">AI features</div>
+  <div class="conn-card">
+    <div style="font-size:14px;font-weight:500;color:var(--bark);margin-bottom:4px;">Anthropic API key</div>
+    <div style="font-size:12px;color:var(--bark-light);margin-bottom:10px;">Powers photo logging and label scanning. Stored only on your device.</div>
+    <input class="setup-input" id="anthropic-key-input" type="password" placeholder="sk-ant-..." style="margin-bottom:8px;" />
+    <button onclick="saveAnthropicKey()" style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--terracotta);color:white;font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;">Save key</button>
+    <div id="anthropic-key-status" style="font-size:12px;color:var(--bark-light);margin-top:8px;text-align:center;"></div>
+  </div>
+
 </div>
 
 <button class="fab" onclick="openSearch()" aria-label="Add food">+</button>
@@ -409,6 +432,10 @@ body { font-family: var(--font-body); background: var(--cream); color: var(--bar
 <div class="sheet" id="search-sheet">
   <div class="sheet-handle"></div>
   <div class="sheet-title">What did you eat?</div>
+  <div class="camera-btns">
+    <button class="camera-btn" onclick="openCamera('meal')">📷 Photo of my meal</button>
+    <button class="camera-btn" onclick="openCamera('label')">🏷️ Scan label</button>
+  </div>
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
     <input class="search-input" id="search-input" type="text" placeholder="Search foods…" autocomplete="off" oninput="onSearch()" />
@@ -416,6 +443,23 @@ body { font-family: var(--font-body); background: var(--cream); color: var(--bar
   <div class="cat-filters" id="cat-filters"></div>
   <div class="search-results" id="search-results"></div>
 </div>
+
+<!-- ── Photo review sheet ── -->
+<div class="photo-sheet" id="photo-sheet">
+  <div style="display:flex;justify-content:center;padding:10px 0 0;">
+    <div style="width:36px;height:4px;border-radius:2px;background:var(--bark-faint);"></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;">
+    <div style="font-family:var(--font-display);font-size:18px;color:var(--bark);" id="photo-sheet-title">Reviewing photo</div>
+    <button onclick="closePhotoSheet()" style="background:none;border:none;color:var(--bark-light);font-size:22px;cursor:pointer;padding:4px 8px;line-height:1;">×</button>
+  </div>
+  <img class="photo-preview" id="photo-preview" />
+  <div id="photo-body" style="overflow-y:auto;flex:1;"></div>
+  <div style="padding:12px 16px 0;" id="photo-footer"></div>
+</div>
+
+<!-- Hidden camera input -->
+<input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none;" onchange="handleCameraInput(this)" />
 
 <div class="qty-sheet" id="qty-sheet">
   <div class="sheet-handle"></div>
@@ -611,19 +655,19 @@ const allFoods = [
     n:{kcal:52,  protein:3.8, fat:1,    carbs:7.5} },
 
   { name:'Cheese (hard)',        emoji:'🧀', unit:'g',    unitLabel:'g',                   portionSize:43,  altUnits:[],
-    portions:[{group:'dairy', size:43}],  source:'1.5 oz (43g) hard cheese = 1 dairy portion',
+    portions:[{group:'protein-animal', size:43},{group:'fats', size:43}], source:'1.5 oz (43g) = 1 protein + 1 fat portion (high in both)',
     n:{kcal:402, protein:25,  fat:33,   carbs:1.3} },
 
   { name:'Feta',                 emoji:'🧀', unit:'g',    unitLabel:'g',                   portionSize:43,  altUnits:[],
-    portions:[{group:'dairy', size:43}],  source:'1.5 oz (43g) = 1 dairy portion',
+    portions:[{group:'fats', size:43}],   source:'1.5 oz (43g) = 1 fat portion (fat-dominant cheese)',
     n:{kcal:264, protein:14,  fat:21,   carbs:4  } },
 
   { name:'Mozzarella',           emoji:'🧀', unit:'g',    unitLabel:'g',                   portionSize:43,  altUnits:[],
-    portions:[{group:'dairy', size:43}],  source:'1.5 oz (43g) = 1 dairy portion',
+    portions:[{group:'protein-animal', size:43},{group:'fats', size:43}], source:'1.5 oz (43g) = 1 protein + 1 fat portion',
     n:{kcal:280, protein:28,  fat:17,   carbs:3.1} },
 
   { name:'Ricotta',              emoji:'🥛', unit:'g',    unitLabel:'g',                   portionSize:113, altUnits:['cup'],
-    portions:[{group:'dairy', size:113}], source:'1/2 cup (113g) = 1 dairy portion',
+    portions:[{group:'protein-animal', size:113}], source:'1/2 cup (113g) = 1 protein portion (similar to cottage cheese)',
     n:{kcal:174, protein:11,  fat:13,   carbs:3  } },
 
   // ── Fats ─────────────────────────────────────────────────────────────
@@ -1030,7 +1074,7 @@ function closeSearch() {
   offResults = [];
 }
 function closeAll() {
-  closeSearch(); closeQty(); closeGroupDetail();
+  closeSearch(); closeQty(); closeGroupDetail(); closePhotoSheet();
   document.getElementById('checkin-sheet').classList.remove('open');
 }
 
@@ -1798,10 +1842,288 @@ function renderGoalsSettings() {
     </div>`).join('');
 }
 
+// ── Camera / AI logging ──────────────────────────────────────────────
+let cameraMode = 'meal'; // 'meal' | 'label'
+let photoItems = [];     // confirmed items from meal photo
+
+function saveAnthropicKey() {
+  const val = document.getElementById('anthropic-key-input').value.trim();
+  if (!val.startsWith('sk-ant-')) {
+    document.getElementById('anthropic-key-status').textContent = 'Key should start with sk-ant-';
+    return;
+  }
+  localStorage.setItem('anthropic_api_key', val);
+  document.getElementById('anthropic-key-status').textContent = '✓ Saved';
+  document.getElementById('anthropic-key-input').value = '';
+}
+
+function openCamera(mode) {
+  const key = localStorage.getItem('anthropic_api_key');
+  if (!key) {
+    alert('Add your Anthropic API key in Settings → AI features first.');
+    closeSearch();
+    showScreen('settings');
+    return;
+  }
+  cameraMode = mode;
+  document.getElementById('camera-input').value = '';
+  document.getElementById('camera-input').click();
+}
+
+async function handleCameraInput(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const dataUrl = e.target.result;
+    const base64 = dataUrl.split(',')[1];
+    const mediaType = file.type || 'image/jpeg';
+    closeSearch();
+    showPhotoSheet(dataUrl);
+    if (cameraMode === 'meal') {
+      await analyzeMealPhoto(base64, mediaType);
+    } else {
+      await analyzeLabelPhoto(base64, mediaType);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function showPhotoSheet(dataUrl) {
+  const preview = document.getElementById('photo-preview');
+  preview.src = dataUrl;
+  preview.style.display = 'block';
+  document.getElementById('photo-sheet-title').textContent =
+    cameraMode === 'meal' ? 'Identifying your meal…' : 'Reading label…';
+  document.getElementById('photo-body').innerHTML =
+    `<div class="camera-spinner"><div class="spinner-ring"></div><div style="font-size:13px;color:var(--bark-light);">Claude is analysing the photo…</div></div>`;
+  document.getElementById('photo-footer').innerHTML = '';
+  document.getElementById('backdrop').classList.add('open');
+  document.getElementById('photo-sheet').classList.add('open');
+}
+
+function closePhotoSheet() {
+  document.getElementById('photo-sheet').classList.remove('open');
+  document.getElementById('backdrop').classList.remove('open');
+  document.getElementById('photo-preview').style.display = 'none';
+  photoItems = [];
+}
+
+async function callClaude(base64, mediaType, prompt) {
+  const key = localStorage.getItem('anthropic_api_key');
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+          { type: 'text', text: prompt }
+        ]
+      }]
+    })
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  const data = await res.json();
+  return data.content[0].text;
+}
+
+async function analyzeMealPhoto(base64, mediaType) {
+  const prompt = `You are a nutrition assistant. Look at this meal photo and identify each distinct food item.
+For each item estimate the quantity eaten (be realistic and conservative).
+Return ONLY a valid JSON array, no explanation, no markdown, just the array:
+[{"name":"chicken breast","qty":150,"unit":"g"},{"name":"white rice","qty":100,"unit":"g"}]
+Use grams for solid foods, ml for liquids. Use "unit" for whole items like eggs or fruits.
+If you cannot identify any food, return an empty array: []`;
+
+  try {
+    const text = await callClaude(base64, mediaType, prompt);
+    const clean = text.trim().replace(/```json|```/g, '').trim();
+    const items = JSON.parse(clean);
+    renderMealResults(items);
+  } catch (err) {
+    document.getElementById('photo-body').innerHTML =
+      `<div style="padding:24px;text-align:center;font-size:13px;color:var(--bark-light);">
+        Couldn't identify the food. Try a clearer photo or search manually.
+        <br><br><span style="font-size:11px;opacity:0.6;">${err.message}</span>
+      </div>`;
+    document.getElementById('photo-footer').innerHTML = '';
+  }
+}
+
+function renderMealResults(items) {
+  document.getElementById('photo-sheet-title').textContent = 'Does this look right?';
+  photoItems = items.map((item, i) => ({ ...item, include: true, index: i }));
+
+  if (!items.length) {
+    document.getElementById('photo-body').innerHTML =
+      `<div style="padding:24px;text-align:center;font-size:13px;color:var(--bark-light);">No food detected — try a clearer photo or search manually.</div>`;
+    return;
+  }
+
+  document.getElementById('photo-body').innerHTML = photoItems.map((item, i) => `
+    <div class="photo-item-row" id="photo-item-${i}">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+        <input type="checkbox" checked onchange="photoItems[${i}].include=this.checked"
+          style="width:18px;height:18px;accent-color:var(--terracotta);flex-shrink:0;" />
+        <div style="min-width:0;">
+          <div class="photo-item-name">${item.name}</div>
+          <div class="photo-item-qty">${item.qty} ${item.unit}</div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('photo-footer').innerHTML = `
+    <button onclick="logPhotoItems()" style="width:100%;padding:15px;border-radius:14px;border:none;background:var(--terracotta);color:white;font-family:var(--font-body);font-size:15px;font-weight:500;cursor:pointer;margin-bottom:8px;">Log selected items</button>
+    <button onclick="closePhotoSheet()" style="width:100%;padding:11px;border-radius:14px;border:1.5px solid var(--bark-faint);background:transparent;color:var(--bark-light);font-family:var(--font-body);font-size:14px;cursor:pointer;">Cancel</button>`;
+}
+
+async function logPhotoItems() {
+  const toLog = photoItems.filter(i => i.include);
+  if (!toLog.length) { closePhotoSheet(); return; }
+
+  let logged = 0;
+  for (const item of toLog) {
+    // Try to find in curated DB first
+    const found = allFoods.find(f => f.name.toLowerCase().includes(item.name.toLowerCase())
+      || item.name.toLowerCase().includes(f.name.toLowerCase().split(' ')[0]));
+    if (found) {
+      const p = found.free ? 0 : Math.round(calcPortions(found, item.qty, item.unit) * 10) / 10;
+      const portionData = found.portions.map(pd => ({ group: pd.group, p }));
+      const nutrition = calcNutrition(found, item.qty, item.unit);
+      logEntries.push({ id: nextId++, name: found.name, qty: item.qty, unit: item.unit, emoji: found.emoji, portionData, nutrition });
+    } else {
+      // Unknown food — log with estimated group from name heuristic
+      const group = guessGroup(item.name);
+      logEntries.push({ id: nextId++, name: item.name, qty: item.qty, unit: item.unit, emoji: '🍽️',
+        portionData: [{ group, p: 1 }], nutrition: { kcal: 0, protein: 0, fat: 0, carbs: 0 } });
+    }
+    logged++;
+  }
+  render();
+  closePhotoSheet();
+  showToast(`${logged} item${logged > 1 ? 's' : ''} logged`);
+}
+
+function guessGroup(name) {
+  const n = name.toLowerCase();
+  if (/chicken|beef|pork|fish|egg|tuna|shrimp|turkey|meat/.test(n)) return 'protein-animal';
+  if (/rice|pasta|bread|oat|potato|quinoa|tortilla|cereal/.test(n)) return 'carbs';
+  if (/salad|vegetable|broccoli|spinach|tomato|pepper|carrot|lettuce/.test(n)) return 'vegetables';
+  if (/fruit|apple|banana|berry|orange|mango|grape/.test(n)) return 'fruit';
+  if (/oil|butter|avocado|nut|almond|cheese/.test(n)) return 'fats';
+  if (/milk|yogurt|kefir/.test(n)) return 'dairy';
+  if (/bean|lentil|tofu|tempeh/.test(n)) return 'protein-veg';
+  return 'carbs'; // safe fallback
+}
+
+async function analyzeLabelPhoto(base64, mediaType) {
+  const prompt = `You are a nutrition assistant. Read the nutritional label in this photo carefully.
+Extract the product name and nutrition facts PER SERVING.
+Return ONLY valid JSON, no explanation, no markdown:
+{"name":"Product name","servingG":30,"kcal":120,"protein":5,"fat":3,"carbs":15}
+Use grams for servingG (convert oz to g if needed: 1oz = 28.35g).
+All nutrition values should be numbers (grams or kcal) per serving.
+If you cannot read the label clearly, return: {"error":"Cannot read label"}`;
+
+  try {
+    const text = await callClaude(base64, mediaType, prompt);
+    const clean = text.trim().replace(/```json|```/g, '').trim();
+    const data = JSON.parse(clean);
+    if (data.error) throw new Error(data.error);
+    renderLabelResult(data);
+  } catch (err) {
+    document.getElementById('photo-body').innerHTML =
+      `<div style="padding:24px;text-align:center;font-size:13px;color:var(--bark-light);">
+        Couldn't read the label. Try better lighting or a flatter angle.
+        <br><br><span style="font-size:11px;opacity:0.6;">${err.message}</span>
+      </div>`;
+  }
+}
+
+function renderLabelResult(data) {
+  document.getElementById('photo-sheet-title').textContent = 'Label scanned ✓';
+  const group = guessGroupFromMacros(data);
+  const groupObj = getGroup(group);
+
+  document.getElementById('photo-body').innerHTML = `
+    <div style="padding:16px;">
+      <div style="font-size:16px;font-weight:600;color:var(--bark);margin-bottom:14px;">${data.name}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+        ${[['Serving', data.servingG+'g'], ['Calories', data.kcal+' kcal'], ['Protein', data.protein+'g'], ['Fat', data.fat+'g'], ['Carbs', data.carbs+'g']]
+          .map(([l,v]) => `<div style="background:var(--cream);border-radius:10px;padding:10px;text-align:center;">
+            <div style="font-size:11px;color:var(--bark-light);">${l}</div>
+            <div style="font-size:15px;font-weight:500;color:var(--bark);">${v}</div>
+          </div>`).join('')}
+      </div>
+      <div style="font-size:13px;color:var(--bark-light);margin-bottom:8px;">Will be logged as:</div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;background:${groupObj?.faint||'var(--cream)'};border-radius:12px;">
+        <div style="font-size:22px;">${groupObj?.emoji||'🍽️'}</div>
+        <div style="font-size:14px;font-weight:500;color:var(--bark);">${groupObj?.name||'Food'}</div>
+      </div>
+    </div>`;
+
+  window._pendingLabelFood = { data, group };
+  document.getElementById('photo-footer').innerHTML = `
+    <button onclick="logPendingLabelFood()"
+      style="width:100%;padding:15px;border-radius:14px;border:none;background:var(--terracotta);color:white;font-family:var(--font-body);font-size:15px;font-weight:500;cursor:pointer;margin-bottom:8px;">
+      Add to today's log
+    </button>
+    <button onclick="closePhotoSheet()" style="width:100%;padding:11px;border-radius:14px;border:1.5px solid var(--bark-faint);background:transparent;color:var(--bark-light);font-family:var(--font-body);font-size:14px;cursor:pointer;">Cancel</button>`;
+}
+
+function guessGroupFromMacros(data) {
+  const { protein = 0, fat = 0, carbs = 0, servingG = 100 } = data;
+  const per100 = g => (g / servingG) * 100;
+  const p = per100(protein), f = per100(fat), c = per100(carbs);
+  if (p > 15) return 'protein-animal';
+  if (f > 20) return 'fats';
+  if (c > 40) return 'carbs';
+  if (p > 8) return 'protein-animal';
+  if (f > 10) return 'fats';
+  return 'carbs';
+}
+
+function logPendingLabelFood() {
+  if (!window._pendingLabelFood) return;
+  const { data, group } = window._pendingLabelFood;
+  window._pendingLabelFood = null;
+  logLabelFood(data, group);
+}
+
+function logLabelFood(data, group) {
+  // Create a temporary food entry from the scanned label
+  const portionSize = data.servingG;
+  const p = 1; // 1 serving = 1 portion
+  logEntries.push({
+    id: nextId++,
+    name: data.name,
+    qty: data.servingG,
+    unit: 'g',
+    emoji: getGroup(group)?.emoji || '🍽️',
+    portionData: [{ group, p }],
+    nutrition: { kcal: data.kcal, protein: data.protein, fat: data.fat, carbs: data.carbs }
+  });
+  render();
+  closePhotoSheet();
+  showToast(`${data.name} logged`);
+}
+
 function renderSettings() {
   renderConnectedApps();
   renderGoalsSettings();
   renderProfileCard();
+  const hasKey = !!localStorage.getItem('anthropic_api_key');
+  const status = document.getElementById('anthropic-key-status');
+  if (status) status.textContent = hasKey ? '✓ API key saved' : '';
 }
 
 function renderProfileCard() {
