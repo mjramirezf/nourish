@@ -1327,6 +1327,22 @@ function resultItemHTML(name, emoji, hint, tags, onclick) {
 function renderResults() {
   const container = document.getElementById('search-results');
 
+  // ── My saved foods (custom) ──
+  const customs = getCustomFoods();
+  let customMatches = Object.values(customs);
+  if (activeFilter !== 'all') customMatches = customMatches.filter(f => f.group === activeFilter);
+  if (searchQuery) customMatches = customMatches.filter(f => f.name.toLowerCase().includes(searchQuery));
+  const customHTML = customMatches.length
+    ? `<div style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;color:var(--bark-light);font-weight:500;padding:4px 4px 8px;">My foods</div>` +
+      customMatches.map(f => {
+        const g = getGroup(f.group);
+        const hint = `${f.servingG}g per serving`;
+        const tags = `<span class="result-tag" style="background:${g?.faint||'var(--cream)'};color:${g?.tagText||'var(--bark)'}">${g?.name||'Food'}</span>`;
+        const safe = f.name.replace(/'/g, "\\'");
+        return resultItemHTML(f.name, g?.emoji||'🍽️', hint, tags, `logCustomFood('${safe}')`);
+      }).join('')
+    : '';
+
   // ── Curated whole foods ──
   let foods = allFoods;
   if (activeFilter !== 'all') foods = foods.filter(f => f.portions.some(pd => pd.group === activeFilter));
@@ -1371,7 +1387,7 @@ function renderResults() {
     }
   }
 
-  if (!curatedHTML && !packagedHTML) {
+  if (!customHTML && !curatedHTML && !packagedHTML) {
     container.innerHTML = `<div class="no-results">No foods found</div>`;
     return;
   }
@@ -1380,7 +1396,25 @@ function renderResults() {
     ? (searchQuery ? `<div style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;color:var(--bark-light);font-weight:500;padding:4px 4px 8px;">Whole foods</div>` : '') + curatedHTML
     : '';
 
-  container.innerHTML = curatedSection + packagedHTML;
+  container.innerHTML = customHTML + curatedSection + packagedHTML;
+}
+
+function logCustomFood(name) {
+  const customs = getCustomFoods();
+  const f = customs[name.toLowerCase().trim()];
+  if (!f) return;
+  logEntries.push({
+    id: nextId++,
+    name: f.name,
+    qty: f.servingG,
+    unit: 'g',
+    emoji: getGroup(f.group)?.emoji || '🍽️',
+    portionData: [{ group: f.group, p: 1 }],
+    nutrition: { kcal: f.kcal, protein: f.protein, fat: f.fat, carbs: f.carbs }
+  });
+  render();
+  closeSearch();
+  showToast(`${f.name} logged`);
 }
 
 function openQty(foodName) {
@@ -1959,9 +1993,30 @@ If you cannot identify any food, return an empty array: []`;
   }
 }
 
+// Grams per 1 portion for each group — used to estimate portions from weight
+const PORTION_SIZE_G = {
+  'protein-animal': 120, 'protein-veg': 100, 'dairy': 240,
+  'fats': 14, 'vegetables': 80, 'fruit': 150, 'carbs': 240, 'sweets': 40,
+};
+
+function estimatePortions(group, qty, unit) {
+  const g = unit === 'g' ? qty : unit === 'ml' ? qty : qty * 100;
+  return Math.max(0.5, Math.round((g / (PORTION_SIZE_G[group] || 120)) * 10) / 10);
+}
+
+function groupSelectHTML(selectedId) {
+  return `<select onchange="void(0)" style="flex:1;padding:7px 10px;border-radius:9px;border:1.5px solid var(--bark-faint);background:var(--cream);font-family:var(--font-body);font-size:13px;color:var(--bark);">
+    ${groups.filter(g => g.goal > 0).map(g =>
+      `<option value="${g.id}" ${g.id === selectedId ? 'selected' : ''}>${g.emoji} ${g.name}</option>`
+    ).join('')}
+  </select>`;
+}
+
 function renderMealResults(items) {
   document.getElementById('photo-sheet-title').textContent = 'Does this look right?';
-  photoItems = items.map((item, i) => ({ ...item, include: true, index: i }));
+  photoItems = items.map((item, i) => ({
+    ...item, include: true, index: i, group: guessGroup(item.name), editing: false
+  }));
 
   if (!items.length) {
     document.getElementById('photo-body').innerHTML =
@@ -1969,21 +2024,53 @@ function renderMealResults(items) {
     return;
   }
 
-  document.getElementById('photo-body').innerHTML = photoItems.map((item, i) => `
-    <div class="photo-item-row" id="photo-item-${i}">
-      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
-        <input type="checkbox" checked onchange="photoItems[${i}].include=this.checked"
-          style="width:18px;height:18px;accent-color:var(--terracotta);flex-shrink:0;" />
-        <div style="min-width:0;">
-          <div class="photo-item-name">${item.name}</div>
-          <div class="photo-item-qty">${item.qty} ${item.unit}</div>
-        </div>
-      </div>
-    </div>`).join('');
-
+  renderPhotoItemRows();
   document.getElementById('photo-footer').innerHTML = `
     <button onclick="logPhotoItems()" style="width:100%;padding:15px;border-radius:14px;border:none;background:var(--terracotta);color:white;font-family:var(--font-body);font-size:15px;font-weight:500;cursor:pointer;margin-bottom:8px;">Log selected items</button>
     <button onclick="closePhotoSheet()" style="width:100%;padding:11px;border-radius:14px;border:1.5px solid var(--bark-faint);background:transparent;color:var(--bark-light);font-family:var(--font-body);font-size:14px;cursor:pointer;">Cancel</button>`;
+}
+
+function renderPhotoItemRows() {
+  document.getElementById('photo-body').innerHTML = photoItems.map((item, i) => {
+    if (item.editing) {
+      const gSel = groupSelectHTML(item.group);
+      return `<div class="photo-item-row" id="photo-item-${i}" style="flex-direction:column;align-items:stretch;gap:8px;">
+        <input id="pi-name-${i}" value="${item.name}" style="padding:9px 12px;border-radius:10px;border:1.5px solid var(--terracotta-light);background:var(--cream);font-family:var(--font-body);font-size:14px;color:var(--bark);outline:none;" />
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="pi-group-${i}" style="flex:1;padding:8px 10px;border-radius:10px;border:1.5px solid var(--bark-faint);background:var(--cream);font-family:var(--font-body);font-size:13px;color:var(--bark);">
+            ${groups.filter(g => g.goal > 0).map(g =>
+              `<option value="${g.id}" ${g.id === item.group ? 'selected' : ''}>${g.emoji} ${g.name}</option>`
+            ).join('')}
+          </select>
+          <button onclick="savePhotoItemEdit(${i})" style="padding:8px 14px;border-radius:10px;border:none;background:var(--terracotta);color:white;font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;">Done</button>
+        </div>
+      </div>`;
+    }
+    const g = getGroup(item.group);
+    return `<div class="photo-item-row" id="photo-item-${i}">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+        <input type="checkbox" ${item.include ? 'checked' : ''} onchange="photoItems[${i}].include=this.checked"
+          style="width:18px;height:18px;accent-color:var(--terracotta);flex-shrink:0;" />
+        <div style="min-width:0;flex:1;">
+          <div class="photo-item-name">${item.name}</div>
+          <div class="photo-item-qty">${item.qty} ${item.unit} · <span style="color:${g?.color||'var(--bark-light)'};">${g?.emoji||''} ${g?.name||'Unknown'}</span></div>
+        </div>
+        <button onclick="togglePhotoItemEdit(${i})" style="background:none;border:none;font-size:16px;cursor:pointer;padding:4px;color:var(--bark-light);">✏️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function togglePhotoItemEdit(i) {
+  photoItems[i].editing = !photoItems[i].editing;
+  renderPhotoItemRows();
+}
+
+function savePhotoItemEdit(i) {
+  photoItems[i].name = document.getElementById(`pi-name-${i}`).value.trim() || photoItems[i].name;
+  photoItems[i].group = document.getElementById(`pi-group-${i}`).value;
+  photoItems[i].editing = false;
+  renderPhotoItemRows();
 }
 
 async function logPhotoItems() {
@@ -1992,19 +2079,22 @@ async function logPhotoItems() {
 
   let logged = 0;
   for (const item of toLog) {
-    // Try to find in curated DB first
-    const found = allFoods.find(f => f.name.toLowerCase().includes(item.name.toLowerCase())
-      || item.name.toLowerCase().includes(f.name.toLowerCase().split(' ')[0]));
-    if (found) {
+    // Try curated DB first, then custom foods
+    const found = allFoods.find(f =>
+      f.name.toLowerCase().includes(item.name.toLowerCase()) ||
+      item.name.toLowerCase().includes(f.name.toLowerCase().split(' ')[0])
+    ) || getCustomFoods().find(f => f.name.toLowerCase() === item.name.toLowerCase());
+
+    if (found && found.portions) {
       const p = found.free ? 0 : Math.round(calcPortions(found, item.qty, item.unit) * 10) / 10;
       const portionData = found.portions.map(pd => ({ group: pd.group, p }));
       const nutrition = calcNutrition(found, item.qty, item.unit);
-      logEntries.push({ id: nextId++, name: found.name, qty: item.qty, unit: item.unit, emoji: found.emoji, portionData, nutrition });
+      logEntries.push({ id: nextId++, name: found.name, qty: item.qty, unit: item.unit, emoji: found.emoji || '🍽️', portionData, nutrition });
     } else {
-      // Unknown food — log with estimated group from name heuristic
-      const group = guessGroup(item.name);
+      const group = item.group || guessGroup(item.name);
+      const p = estimatePortions(group, item.qty, item.unit);
       logEntries.push({ id: nextId++, name: item.name, qty: item.qty, unit: item.unit, emoji: '🍽️',
-        portionData: [{ group, p: 1 }], nutrition: { kcal: 0, protein: 0, fat: 0, carbs: 0 } });
+        portionData: [{ group, p }], nutrition: { kcal: 0, protein: 0, fat: 0, carbs: 0 } });
     }
     logged++;
   }
@@ -2052,26 +2142,34 @@ If you cannot read the label clearly, return: {"error":"Cannot read label"}`;
 function renderLabelResult(data) {
   document.getElementById('photo-sheet-title').textContent = 'Label scanned ✓';
   const group = guessGroupFromMacros(data);
-  const groupObj = getGroup(group);
 
   document.getElementById('photo-body').innerHTML = `
     <div style="padding:16px;">
-      <div style="font-size:16px;font-weight:600;color:var(--bark);margin-bottom:14px;">${data.name}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--bark-light);margin-bottom:6px;">Product name</div>
+      <input id="label-name" value="${data.name}" style="width:100%;box-sizing:border-box;padding:10px 14px;border-radius:12px;border:1.5px solid var(--bark-faint);background:var(--cream);font-family:var(--font-body);font-size:15px;color:var(--bark);outline:none;margin-bottom:14px;" />
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
         ${[['Serving', data.servingG+'g'], ['Calories', data.kcal+' kcal'], ['Protein', data.protein+'g'], ['Fat', data.fat+'g'], ['Carbs', data.carbs+'g']]
           .map(([l,v]) => `<div style="background:var(--cream);border-radius:10px;padding:10px;text-align:center;">
             <div style="font-size:11px;color:var(--bark-light);">${l}</div>
             <div style="font-size:15px;font-weight:500;color:var(--bark);">${v}</div>
           </div>`).join('')}
       </div>
-      <div style="font-size:13px;color:var(--bark-light);margin-bottom:8px;">Will be logged as:</div>
-      <div style="display:flex;align-items:center;gap:10px;padding:12px;background:${groupObj?.faint||'var(--cream)'};border-radius:12px;">
-        <div style="font-size:22px;">${groupObj?.emoji||'🍽️'}</div>
-        <div style="font-size:14px;font-weight:500;color:var(--bark);">${groupObj?.name||'Food'}</div>
-      </div>
+
+      <div style="font-size:12px;color:var(--bark-light);margin-bottom:6px;">Food group</div>
+      <select id="label-group" style="width:100%;padding:10px 14px;border-radius:12px;border:1.5px solid var(--bark-faint);background:var(--cream);font-family:var(--font-body);font-size:14px;color:var(--bark);margin-bottom:14px;">
+        ${groups.filter(g => g.goal > 0).map(g =>
+          `<option value="${g.id}" ${g.id === group ? 'selected' : ''}>${g.emoji} ${g.name}</option>`
+        ).join('')}
+      </select>
+
+      <label style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--bark-light);cursor:pointer;">
+        <input type="checkbox" id="label-save" checked style="width:16px;height:16px;accent-color:var(--terracotta);" />
+        Save to my foods for future searches
+      </label>
     </div>`;
 
-  window._pendingLabelFood = { data, group };
+  window._pendingLabelFood = { data };
   document.getElementById('photo-footer').innerHTML = `
     <button onclick="logPendingLabelFood()"
       style="width:100%;padding:15px;border-radius:14px;border:none;background:var(--terracotta);color:white;font-family:var(--font-body);font-size:15px;font-weight:500;cursor:pointer;margin-bottom:8px;">
@@ -2094,27 +2192,58 @@ function guessGroupFromMacros(data) {
 
 function logPendingLabelFood() {
   if (!window._pendingLabelFood) return;
-  const { data, group } = window._pendingLabelFood;
+  const { data } = window._pendingLabelFood;
   window._pendingLabelFood = null;
-  logLabelFood(data, group);
+
+  const nameEl = document.getElementById('label-name');
+  const groupEl = document.getElementById('label-group');
+  const saveEl = document.getElementById('label-save');
+
+  const name = nameEl ? nameEl.value.trim() || data.name : data.name;
+  const group = groupEl ? groupEl.value : guessGroupFromMacros(data);
+  const shouldSave = saveEl ? saveEl.checked : false;
+
+  if (shouldSave) {
+    saveCustomFood({ ...data, name }, group);
+  }
+
+  logLabelFood({ ...data, name }, group);
 }
 
 function logLabelFood(data, group) {
-  // Create a temporary food entry from the scanned label
-  const portionSize = data.servingG;
-  const p = 1; // 1 serving = 1 portion
   logEntries.push({
     id: nextId++,
     name: data.name,
     qty: data.servingG,
     unit: 'g',
     emoji: getGroup(group)?.emoji || '🍽️',
-    portionData: [{ group, p }],
+    portionData: [{ group, p: 1 }],
     nutrition: { kcal: data.kcal, protein: data.protein, fat: data.fat, carbs: data.carbs }
   });
   render();
   closePhotoSheet();
   showToast(`${data.name} logged`);
+}
+
+function saveCustomFood(data, group) {
+  const customs = getCustomFoods();
+  const key = data.name.toLowerCase().trim();
+  customs[key] = {
+    name: data.name,
+    group,
+    servingG: data.servingG,
+    kcal: data.kcal,
+    protein: data.protein,
+    fat: data.fat,
+    carbs: data.carbs,
+    savedAt: Date.now()
+  };
+  localStorage.setItem('nourish_custom_foods', JSON.stringify(customs));
+}
+
+function getCustomFoods() {
+  try { return JSON.parse(localStorage.getItem('nourish_custom_foods') || '{}'); }
+  catch { return {}; }
 }
 
 function renderSettings() {
