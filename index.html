@@ -2895,8 +2895,35 @@ async function handleOAuthCallback() {
 }
 
 // ── Onboarding ───────────────────────────────────────────────────────
-const OB_STEPS = ['name','bio','body','activity','goal','summary'];
+const OB_STEPS = ['name','bio','body','activity','goal','summary','tutorial'];
 let obStep = 0;
+let obTutCard = 0;
+const OB_TUT_CARDS = [
+  {
+    emoji: '🫘',
+    title: 'Portions, not calories',
+    body: 'We track food in <strong>portions</strong> — roughly what a typical serving looks like. No calorie counting, no math. Just fill your dots.',
+    visual: 'pips',
+  },
+  {
+    emoji: '➕',
+    title: 'Logging a meal',
+    body: 'Tap any food group card to search foods, scan a barcode, or photograph your plate. The app figures out the portions.',
+    visual: 'log',
+  },
+  {
+    emoji: '🌙',
+    title: 'Evening check-in',
+    body: 'Once a day, rate your <strong>sleep</strong>, <strong>energy</strong>, and <strong>mood</strong>. Over weeks you\'ll start seeing what foods actually make you feel good.',
+    visual: 'checkin',
+  },
+  {
+    emoji: '📅',
+    title: 'Your progress',
+    body: 'The Progress tab shows each day as a dot grid — filled means you hit that group\'s goal. Patterns emerge fast.',
+    visual: 'progress',
+  },
+];
 let obData = { name:'', sex:'', age:'', heightCm:'', weightKg:'', heightUnit:'cm', weightUnit:'kg', diet:'omnivore', activity:'', goal:'' };
 
 function obRender() {
@@ -2909,11 +2936,21 @@ function obRender() {
   ).join('');
 
   const btn = document.getElementById('ob-btn');
-  btn.textContent = step === 'summary' ? "Let's go 🌿" : 'Continue';
+  if (step === 'tutorial') {
+    btn.textContent = obTutCard < OB_TUT_CARDS.length - 1 ? 'Next' : 'Get started 🌿';
+  } else {
+    btn.textContent = step === 'summary' ? 'See how it works →' : 'Continue';
+  }
   btn.disabled = !obCanContinue();
 
-  const back = obStep > 0 && step !== 'summary'
-    ? `<button class="ob-back" onclick="obBack()">←</button>` : '';
+  // Hide progress pips on tutorial
+  document.getElementById('ob-progress').style.visibility = step === 'tutorial' ? 'hidden' : 'visible';
+
+  const back = obStep > 0 && step !== 'summary' && step !== 'tutorial'
+    ? `<button class="ob-back" onclick="obBack()">←</button>`
+    : step === 'tutorial' && obTutCard > 0
+      ? `<button class="ob-back" onclick="obTutCard--;obRender()">←</button>`
+      : '';
 
   let html = '';
   if (step === 'name') {
@@ -3043,6 +3080,62 @@ function obRender() {
       </div>`;
   }
 
+  if (step === 'tutorial') {
+    const card = OB_TUT_CARDS[obTutCard];
+    const dots = OB_TUT_CARDS.map((_, i) =>
+      `<div style="width:6px;height:6px;border-radius:50%;background:${i === obTutCard ? 'var(--terracotta)' : 'var(--bark-faint)'};transition:background 0.2s;"></div>`
+    ).join('');
+
+    const visual = {
+      pips: `<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:8px 0;">
+        ${['#E88C5A','#4CAF82','#F0B429','#7B6FCC','#2D9B6F','#E86B8C','#E8A040'].map((c,i) =>
+          `<div style="width:${i<3?36:28}px;height:${i<3?36:28}px;border-radius:50%;background:${i<3?c:'var(--bark-faint)'};transition:all 0.3s;"></div>`
+        ).join('')}
+      </div>`,
+      log: `<div style="display:flex;flex-direction:column;gap:8px;">
+        ${[['🔍','Search by name'],['📷','Photo of your meal'],['📦','Scan a barcode']].map(([e,l]) =>
+          `<div style="display:flex;align-items:center;gap:12px;background:var(--warm-white);border-radius:12px;padding:12px 14px;">
+            <span style="font-size:20px;">${e}</span>
+            <span style="font-size:13px;color:var(--bark);">${l}</span>
+          </div>`
+        ).join('')}
+      </div>`,
+      checkin: `<div style="display:flex;gap:10px;justify-content:center;">
+        ${[['😴','Sleep','#7B6FCC'],['⚡','Energy','#E8A040'],['😊','Mood','#4CAF82']].map(([e,l,c]) =>
+          `<div style="flex:1;background:var(--warm-white);border-radius:14px;padding:14px 8px;text-align:center;">
+            <div style="font-size:24px;">${e}</div>
+            <div style="font-size:11px;color:${c};font-weight:500;margin-top:4px;">${l}</div>
+            <div style="display:flex;gap:3px;justify-content:center;margin-top:8px;">
+              ${[1,2,3,4,5].map(n => `<div style="width:8px;height:8px;border-radius:50%;background:${n<=3?c:'var(--bark-faint)'}"></div>`).join('')}
+            </div>
+          </div>`
+        ).join('')}
+      </div>`,
+      progress: `<div style="display:flex;flex-direction:column;gap:6px;">
+        ${['#E88C5A','#4CAF82','#7B6FCC'].map((c,ri) =>
+          `<div style="display:flex;gap:5px;align-items:center;">
+            <div style="width:6px;height:6px;border-radius:50%;background:${c};flex-shrink:0;"></div>
+            <div style="display:flex;gap:5px;">
+              ${Array.from({length:7},(_,i) => {
+                const filled = (ri===0&&i<5)||(ri===1&&i<4)||(ri===2&&i<6);
+                return `<div style="width:22px;height:22px;border-radius:6px;background:${filled?c:'var(--bark-faint)'};border:${filled?'none':'1.5px solid var(--bark-faint)'};"></div>`;
+              }).join('')}
+            </div>
+          </div>`
+        ).join('')}
+      </div>`,
+    }[card.visual] || '';
+
+    html = `
+      <div style="text-align:center;padding:8px 0 16px;">
+        <div style="font-size:48px;margin-bottom:16px;">${card.emoji}</div>
+        <div class="ob-title" style="font-size:22px;margin-bottom:10px;">${card.title}</div>
+        <div class="ob-sub" style="margin-bottom:24px;">${card.body}</div>
+        <div style="background:var(--cream);border-radius:16px;padding:20px;margin-bottom:24px;">${visual}</div>
+        <div style="display:flex;gap:6px;justify-content:center;">${dots}</div>
+      </div>`;
+  }
+
   document.getElementById('ob-body').innerHTML = html;
   if (step === 'name') setTimeout(() => document.getElementById('ob-name')?.focus(), 100);
 }
@@ -3059,12 +3152,26 @@ function obCanContinue() {
 
 function obNext() {
   if (!obCanContinue()) return;
-  if (OB_STEPS[obStep] === 'summary') { obFinish(); return; }
+  if (OB_STEPS[obStep] === 'tutorial') {
+    if (obTutCard < OB_TUT_CARDS.length - 1) {
+      obTutCard++;
+      obRender();
+      return;
+    }
+    obFinish();
+    return;
+  }
+  if (OB_STEPS[obStep] === 'summary') { obStep++; obTutCard = 0; obRender(); return; }
   obStep++;
   obRender();
 }
 
 function obBack() {
+  if (OB_STEPS[obStep] === 'tutorial') {
+    if (obTutCard > 0) { obTutCard--; obRender(); }
+    else { obStep--; obRender(); }
+    return;
+  }
   if (obStep > 0) { obStep--; obRender(); }
 }
 
