@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="c"></canvas>
+<br><a id="dl192" download="icon-192.png">Download icon-192.png</a>
+<br><a id="dl512" download="icon-512.png">Download icon-512.png</a>
+<script>
+function makeIcon(size) {
+  const c = document.getElementById('c');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const r = size * 0.18;
+
+  // Background
+  ctx.fillStyle = '#F9F8FF';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, size, size, r);
+  ctx.fill();
+
+  // Circle
+  ctx.fillStyle = '#7B6FCC';
+  ctx.beginPath();
+  ctx.arc(size/2, size/2, size * 0.36, 0, Math.PI*2);
+  ctx.fill();
+
+  // Letter n
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = `bold ${size*0.38}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('n', size/2, size/2 + size*0.02);
+
+  return c.toDataURL('image/png');
+}
+
+const url192 = makeIcon(192);
+document.getElementById('dl192').href = url192;
+
+const url512 = makeIcon(512);
+document.getElementById('dl512').href = url512;
+</script>
+</body>
+</html>
