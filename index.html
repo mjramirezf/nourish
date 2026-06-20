@@ -1089,48 +1089,107 @@ function renderCatFilters() {
   }).join('');
 }
 function setFilter(id) { activeFilter = id; renderCatFilters(); renderResults(); }
-// ── Open Food Facts integration ──────────────────────────────────────
-// Maps a packaged product's macros to the most appropriate food group.
-function inferGroups(n100) {
-  const { protein = 0, fat = 0, carbs = 0, sugar = 0, kcal = 0 } = n100;
-  const groups = [];
+// ── Portion calculation from macros ──────────────────────────────────
+// Reference: grams of key macro that equal 1 portion of each group
+const PORTION_REF = {
+  'protein-animal': 30,  // g protein → 1 portion (palm-size serving of meat/fish)
+  'protein-veg':    20,  // g protein → 1 portion (legumes/tofu are less dense)
+  'dairy':         240,  // g or ml  → 1 portion (1 cup milk/yogurt/kefir)
+  'fats':           15,  // g fat    → 1 portion (1 tbsp oil, small handful nuts)
+  'carbs':          45,  // g net starchy carbs → 1 portion (1 cup cooked grains)
+  'vegetables':     80,  // g        → 1 portion (1 cup raw)
+  'fruit':          15,  // g fruit sugar → 1 portion (1 medium fruit)
+  'sweets':         20,  // g sugar  → 1 portion
+};
 
-  // Fruit — check FIRST: whole-food profile, low kcal, low fat, low protein,
-  // carbs mostly from natural sugar. Bananas, apples, oranges all land here.
-  const sugarRatio = carbs > 0 ? (sugar || 0) / carbs : 0;
-  const isFruitProfile = kcal < 100 && fat < 2 && protein < 2 && carbs >= 8 && sugarRatio >= 0.5;
-  if (isFruitProfile) { groups.push('fruit'); return groups; } // fruit is never also carbs/fats
+// Converts per-100g macros + serving size into portionData [{group, p}] for ONE full serving.
+// name hint (food name) improves dairy detection.
+function calcPortionData(n100, servingQty, name = '') {
+  const s  = servingQty / 100;
+  const protein = (n100.protein || 0) * s;
+  const fat     = (n100.fat     || 0) * s;
+  const carbs   = (n100.carbs   || 0) * s;
+  const sugar   = (n100.sugar   || 0) * s;
+  const kcal    = (n100.kcal    || 0) * s;
+  const r1 = v => Math.round(v * 10) / 10;
+  const MIN = 0.2;
+  const result = [];
+  const lname = name.toLowerCase();
 
-  // Vegetables — very low calorie, very low carb
+  // ── Dairy ──────────────────────────────────────────
+  const DAIRY_WORDS = ['yogurt', 'yoghurt', 'milk', 'kefir', 'buttermilk', 'lassi'];
+  const isDairyName = DAIRY_WORDS.some(w => lname.includes(w));
+  const sugarRatio = carbs > 0 ? sugar / carbs : 0;
+  // Dairy macro profile: notable protein + carbs (from lactose, high sugar ratio), low kcal density
+  const isDairyMacros = protein >= 1 && carbs >= 2 && sugarRatio >= 0.6 && kcal < 200 && fat < protein * 2.5;
+  if (isDairyName || isDairyMacros) {
+    result.push({ group: 'dairy', p: Math.max(MIN, r1(servingQty / PORTION_REF.dairy)) });
+    return result;
+  }
+
+  // ── Fruit ──────────────────────────────────────────
+  const isFruit = kcal < 120 && fat < 2 && protein < 3 && carbs >= 5 && sugarRatio >= 0.5;
+  if (isFruit) {
+    result.push({ group: 'fruit', p: Math.max(MIN, r1(sugar / PORTION_REF.fruit)) });
+    return result;
+  }
+
+  // ── Vegetables ─────────────────────────────────────
   if (kcal < 50 && carbs < 8 && protein < 5 && fat < 2) {
-    groups.push('vegetables'); return groups;
+    result.push({ group: 'vegetables', p: Math.max(MIN, r1(servingQty / PORTION_REF.vegetables)) });
+    return result;
   }
 
-  // Protein — animal if high protein + notable fat; plant if lower fat
-  if (protein >= 15 && fat >= 6)           groups.push('protein-animal');
-  else if (protein >= 15)                  groups.push('protein-animal');
-  else if (protein >= 6 && fat < 8 && carbs >= 10) groups.push('protein-veg');
-  else if (protein >= 6 && fat < 8)        groups.push('protein-animal');
-
-  // Fats — significant fat content
-  if (fat >= 10) groups.push('fats');
-
-  // Sweets — high sugar OR indulgent profile (high kcal, fat + sugar combo)
-  const netSugar = sugar || 0;
-  if (netSugar >= 20 || (kcal >= 300 && fat >= 15 && carbs >= 30)) groups.push('sweets');
-
-  // Carbs — starchy carbs that aren't primarily sugar/sweets
-  const nonSugarCarbs = carbs - (sugar || 0);
-  if (carbs >= 30 && nonSugarCarbs >= 15 && !groups.includes('sweets')) groups.push('carbs');
-
-  // Fallback
-  if (groups.length === 0) {
-    if (protein >= fat && protein >= carbs / 4) groups.push('protein-animal');
-    else if (fat >= carbs / 4)                  groups.push('fats');
-    else                                         groups.push('carbs');
+  // ── Sweets ─────────────────────────────────────────
+  const isSweets = sugar >= 12 || (kcal >= 250 && fat >= 10 && carbs >= 20 && sugar >= 8);
+  if (isSweets) {
+    const p = r1(sugar / PORTION_REF.sweets);
+    if (p >= MIN) result.push({ group: 'sweets', p });
+    const fatP = r1(fat / PORTION_REF.fats);
+    if (fatP >= MIN && fat >= 8) result.push({ group: 'fats', p: fatP });
+    if (result.length) return result;
   }
 
-  return [...new Set(groups)];
+  // ── Protein ────────────────────────────────────────
+  // Plant protein: notably higher carb-to-protein ratio (legumes, tofu, tempeh)
+  const cpr = protein > 0 ? carbs / protein : 999;
+  const isVegProtein = protein >= 5 && cpr >= 1.5 && fat < protein;
+  if (isVegProtein) {
+    const p = r1(protein / PORTION_REF['protein-veg']);
+    if (p >= MIN) result.push({ group: 'protein-veg', p });
+  } else if (protein >= 5) {
+    const p = r1(protein / PORTION_REF['protein-animal']);
+    if (p >= MIN) result.push({ group: 'protein-animal', p });
+  }
+
+  // ── Fats ───────────────────────────────────────────
+  // Skip separate fat for high-protein animal foods (fat is part of the protein serving)
+  // unless fat exceeds protein (e.g. hard cheese, fatty cuts, bacon)
+  const proteinDominant = protein >= 12 && fat < protein;
+  if (!proteinDominant && fat >= 4) {
+    const p = r1(fat / PORTION_REF.fats);
+    if (p >= MIN) result.push({ group: 'fats', p });
+  }
+
+  // ── Starchy carbs ──────────────────────────────────
+  const netStarch = carbs - (sugar || 0);
+  // Don't double-count carbs already captured as protein-veg (legumes etc)
+  if (netStarch >= 15 && !isVegProtein) {
+    const p = r1(netStarch / PORTION_REF.carbs);
+    if (p >= MIN) result.push({ group: 'carbs', p });
+  }
+
+  // ── Fallback ───────────────────────────────────────
+  if (result.length === 0) {
+    if (protein >= fat && protein >= carbs)
+      result.push({ group: 'protein-animal', p: Math.max(MIN, r1(protein / PORTION_REF['protein-animal'])) });
+    else if (fat >= carbs / 3)
+      result.push({ group: 'fats', p: Math.max(MIN, r1(fat / PORTION_REF.fats)) });
+    else
+      result.push({ group: 'carbs', p: Math.max(MIN, r1(carbs / PORTION_REF.carbs)) });
+  }
+
+  return result;
 }
 
 // Converts an Open Food Facts product into our food schema.
@@ -1154,20 +1213,22 @@ function offProductToFood(product) {
     salt:    Math.round((n['salt_100g']         || 0) * 10) / 10,
   };
 
-  const gids = inferGroups(n100);
-  const g    = getGroup(gids[0]);
+  const portionData = calcPortionData(n100, servingQty, name);
+  const primaryG    = getGroup(portionData[0].group);
+  const servingText = product.serving_size ? `${product.serving_size} · ${servingQty}${unit}` : `${servingQty}${unit}`;
 
   return {
     name,
     brand,
     displayName: brand ? `${name} · ${brand}` : name,
-    emoji: g.emoji,
+    emoji: primaryG.emoji,
     unit,
     unitLabel: unit,
     portionSize: servingQty,
+    servingText,
     altUnits: [],
-    portions: gids.map(gid => ({ group: gid, size: servingQty })),
-    source: `Open Food Facts · serving: ${servingQty}${unit}`,
+    portions: portionData,
+    source: `Open Food Facts · serving: ${servingText}`,
     n: n100,
     isPackaged: true,
     offId: product.code,
@@ -1205,16 +1266,16 @@ function usdaToFood(f) {
     sugar:   getNutrient(nutrients, NID.sugar),
     sodium:  getNutrient(nutrients, NID.sodium),
   };
-  const gids = inferGroups(n100);
-  const primaryG = getGroup(gids[0]);
   const name  = toTitle(f.description);
   const brand = toTitle(f.brandOwner || f.brandName || '');
+  const portionData = calcPortionData(n100, servingSize, name);
+  const primaryG    = getGroup(portionData[0].group);
   return {
     name, brand,
     displayName: brand ? `${name} · ${brand}` : name,
     emoji: primaryG.emoji, unit, unitLabel: unit,
     portionSize: servingSize, altUnits: [],
-    portions: gids.map(gid => ({ group: gid, size: servingSize })),
+    portions: portionData,
     source: `USDA FoodData Central · serving: ${servingSize}${unit}`,
     n: n100, isPackaged: true, _src: 'usda',
   };
@@ -1235,17 +1296,18 @@ function offToFood(p) {
     sugar:   n['sugars_100g'] != null ? Math.round(n['sugars_100g'] * 10) / 10 : null,
     sodium:  n['sodium_100g'] != null ? Math.round(n['sodium_100g'] * 1000)    : null,
   };
-  const gids = inferGroups(n100);
-  const primaryG = getGroup(gids[0]);
   const name  = p.product_name;
   const brand = p.brands || '';
+  const portionData = calcPortionData(n100, servingSize, name);
+  const primaryG    = getGroup(portionData[0].group);
+  const servingText = p.serving_size ? `${p.serving_size} · ${servingSize}${unit}` : `${servingSize}${unit}`;
   return {
     name, brand,
     displayName: brand ? `${name} · ${brand}` : name,
     emoji: primaryG.emoji, unit, unitLabel: unit,
-    portionSize: servingSize, altUnits: [],
-    portions: gids.map(gid => ({ group: gid, size: servingSize })),
-    source: `Open Food Facts · serving: ${servingSize}${unit}`,
+    portionSize: servingSize, servingText, altUnits: [],
+    portions: portionData,
+    source: `Open Food Facts · serving: ${servingText}`,
     n: n100, isPackaged: true, _src: 'off',
   };
 }
@@ -1260,7 +1322,7 @@ async function fetchOFF(query) {
   const [usdaResult, offResult] = await Promise.allSettled([
     fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&dataType=Branded&pageSize=20&api_key=${USDA_KEY}`)
       .then(r => r.ok ? r.json() : Promise.reject('USDA ' + r.status)),
-    fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,brands,nutriments,serving_quantity,serving_quantity_unit`)
+    fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,brands,nutriments,serving_quantity,serving_quantity_unit,serving_size`)
       .then(r => r.ok ? r.json() : Promise.reject('OFF ' + r.status)),
   ]);
 
@@ -1373,9 +1435,11 @@ function renderResults() {
       // Store packaged results by index so openQtyPackaged can retrieve them
       window._offResults = offResults;
       const items = offResults.map((f, i) => {
-        const g = getGroup(f.portions[0].group);
-        const hint = `${f.portionSize}${f.unitLabel} per serving`;
-        const tags = `<span class="result-tag" style="background:${g.faint};color:${g.tagText}">${g.name}</span>`;
+        const hint = f.servingText || `${f.portionSize}${f.unitLabel}`;
+        const tags = f.portions.map(pd => {
+          const pg = getGroup(pd.group);
+          return `<span class="result-tag" style="background:${pg.faint};color:${pg.tagText}">${formatP(pd.p)} ${pg.name}</span>`;
+        }).join('');
         return resultItemHTML(
           f.displayName, f.emoji, hint, tags,
           `openQtyPackaged(${i})`
@@ -1436,9 +1500,9 @@ function openQty(foodName) {
   // Dual-group note
   const dualNote = document.getElementById('qty-dual-note');
   if (food.portions.length > 1) {
-    const groupNames = food.portions.map(pd => getGroup(pd.group).name).join(' + ');
+    const parts = food.portions.map(pd => `${pd.p} ${getGroup(pd.group).name}`).join(' + ');
     dualNote.style.display = 'block';
-    dualNote.textContent = `This food counts toward both ${groupNames}. One serving logs a portion in each group.`;
+    dualNote.textContent = `Per serving: ${parts}.`;
   } else {
     dualNote.style.display = 'none';
   }
@@ -1507,11 +1571,23 @@ function updateUnitDisplay() {
 function updateHint() {
   const qty = parseFloat(document.getElementById('qty-input').value);
   if (!pendingFood || isNaN(qty) || qty <= 0) { document.getElementById('qty-hint').innerHTML = ''; return; }
-  const p = calcPortions(pendingFood, qty, activeUnit);
-  const pStr = formatP(p);
-  const word = parseFloat(pStr) === 1 ? 'portion' : 'portions';
-  const multi = pendingFood.portions.length > 1 ? ' (in each group)' : '';
-  document.getElementById('qty-hint').innerHTML = `That's <strong>${pStr} ${word}${multi}</strong>`;
+
+  if (pendingFood.isPackaged) {
+    // Show scaled portions per group
+    const servingRatio = qty / pendingFood.portionSize;
+    const parts = pendingFood.portions.map(pd => {
+      const scaled = Math.round(pd.p * servingRatio * 10) / 10;
+      const g = getGroup(pd.group);
+      return `<strong>${scaled}</strong> ${g.name}`;
+    }).join(' + ');
+    document.getElementById('qty-hint').innerHTML = `That's ${parts}`;
+  } else {
+    const p = calcPortions(pendingFood, qty, activeUnit);
+    const pStr = formatP(p);
+    const word = parseFloat(pStr) === 1 ? 'portion' : 'portions';
+    const multi = pendingFood.portions.length > 1 ? ' (in each group)' : '';
+    document.getElementById('qty-hint').innerHTML = `That's <strong>${pStr} ${word}${multi}</strong>`;
+  }
 }
 
 function confirmLog() {
@@ -1532,9 +1608,9 @@ function confirmLog() {
       sugar:   Math.round((pendingFood.n.sugar  || 0) * factor * 10) / 10,
       sodium:  Math.round((pendingFood.n.sodium || 0) * factor * 10) / 10,
     };
-    // Assign fractional portions based on how much of the serving was eaten
+    // Scale pre-calculated per-serving portions by how much of the serving was eaten
     const servingRatio = qty / pendingFood.portionSize;
-    portionData = pendingFood.portions.map(pd => ({ group: pd.group, p: Math.round(servingRatio * 10) / 10 }));
+    portionData = pendingFood.portions.map(pd => ({ group: pd.group, p: Math.max(0.1, Math.round(pd.p * servingRatio * 10) / 10) }));
   } else {
     // Curated whole food: use our standard portion + nutrition calculation
     const p = pendingFood.free ? 0 : Math.round(calcPortions(pendingFood, qty, activeUnit) * 10) / 10;
@@ -2141,7 +2217,21 @@ If you cannot read the label clearly, return: {"error":"Cannot read label"}`;
 
 function renderLabelResult(data) {
   document.getElementById('photo-sheet-title').textContent = 'Label scanned ✓';
-  const group = guessGroupFromMacros(data);
+  const servingG = data.servingG || 100;
+  const n100 = {
+    protein: ((data.protein || 0) / servingG) * 100,
+    fat:     ((data.fat     || 0) / servingG) * 100,
+    carbs:   ((data.carbs   || 0) / servingG) * 100,
+    sugar:   ((data.sugar   || 0) / servingG) * 100,
+    kcal:    ((data.kcal    || 0) / servingG) * 100,
+  };
+  const portionData = calcPortionData(n100, servingG, data.name || '');
+  const primaryGroup = portionData[0].group;
+
+  const portionTags = portionData.map(pd => {
+    const g = getGroup(pd.group);
+    return `<span style="background:${g.faint};color:${g.tagText};padding:3px 10px;border-radius:12px;font-size:12px;font-weight:500;">${formatP(pd.p)} ${g.name}</span>`;
+  }).join(' ');
 
   document.getElementById('photo-body').innerHTML = `
     <div style="padding:16px;">
@@ -2149,17 +2239,20 @@ function renderLabelResult(data) {
       <input id="label-name" value="${data.name}" style="width:100%;box-sizing:border-box;padding:10px 14px;border-radius:12px;border:1.5px solid var(--bark-faint);background:var(--cream);font-family:var(--font-body);font-size:15px;color:var(--bark);outline:none;margin-bottom:14px;" />
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
-        ${[['Serving', data.servingG+'g'], ['Calories', data.kcal+' kcal'], ['Protein', data.protein+'g'], ['Fat', data.fat+'g'], ['Carbs', data.carbs+'g']]
+        ${[['Serving', servingG+'g'], ['Calories', (data.kcal||0)+' kcal'], ['Protein', (data.protein||0)+'g'], ['Fat', (data.fat||0)+'g'], ['Carbs', (data.carbs||0)+'g']]
           .map(([l,v]) => `<div style="background:var(--cream);border-radius:10px;padding:10px;text-align:center;">
             <div style="font-size:11px;color:var(--bark-light);">${l}</div>
             <div style="font-size:15px;font-weight:500;color:var(--bark);">${v}</div>
           </div>`).join('')}
       </div>
 
-      <div style="font-size:12px;color:var(--bark-light);margin-bottom:6px;">Food group</div>
+      <div style="font-size:12px;color:var(--bark-light);margin-bottom:6px;">Portions per serving</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">${portionTags}</div>
+
+      <div style="font-size:12px;color:var(--bark-light);margin-bottom:6px;">Override food group</div>
       <select id="label-group" style="width:100%;padding:10px 14px;border-radius:12px;border:1.5px solid var(--bark-faint);background:var(--cream);font-family:var(--font-body);font-size:14px;color:var(--bark);margin-bottom:14px;">
         ${groups.filter(g => g.goal > 0).map(g =>
-          `<option value="${g.id}" ${g.id === group ? 'selected' : ''}>${g.emoji} ${g.name}</option>`
+          `<option value="${g.id}" ${g.id === primaryGroup ? 'selected' : ''}>${g.emoji} ${g.name}</option>`
         ).join('')}
       </select>
 
@@ -2179,15 +2272,16 @@ function renderLabelResult(data) {
 }
 
 function guessGroupFromMacros(data) {
-  const { protein = 0, fat = 0, carbs = 0, servingG = 100 } = data;
-  const per100 = g => (g / servingG) * 100;
-  const p = per100(protein), f = per100(fat), c = per100(carbs);
-  if (p > 15) return 'protein-animal';
-  if (f > 20) return 'fats';
-  if (c > 40) return 'carbs';
-  if (p > 8) return 'protein-animal';
-  if (f > 10) return 'fats';
-  return 'carbs';
+  const { protein = 0, fat = 0, carbs = 0, sugar = 0, kcal = 0, servingG = 100, name = '' } = data;
+  const n100 = {
+    protein: (protein / servingG) * 100,
+    fat:     (fat     / servingG) * 100,
+    carbs:   (carbs   / servingG) * 100,
+    sugar:   (sugar   / servingG) * 100,
+    kcal:    (kcal    / servingG) * 100,
+  };
+  const pd = calcPortionData(n100, servingG, name);
+  return pd[0].group;
 }
 
 function logPendingLabelFood() {
@@ -2211,14 +2305,30 @@ function logPendingLabelFood() {
 }
 
 function logLabelFood(data, group) {
+  // Build n100 from label data for accurate portion calculation
+  const servingG = data.servingG || 100;
+  const n100 = {
+    protein: ((data.protein || 0) / servingG) * 100,
+    fat:     ((data.fat     || 0) / servingG) * 100,
+    carbs:   ((data.carbs   || 0) / servingG) * 100,
+    sugar:   ((data.sugar   || 0) / servingG) * 100,
+    kcal:    ((data.kcal    || 0) / servingG) * 100,
+  };
+  // If user picked a group manually, honour it but still use macro-based portion count
+  let portionData = calcPortionData(n100, servingG, data.name);
+  if (group && portionData[0].group !== group) {
+    // User overrode the group — remap primary group but keep the portion amount
+    portionData = [{ group, p: portionData[0].p }, ...portionData.slice(1)];
+  }
+  const primaryGroup = portionData[0].group;
   logEntries.push({
     id: nextId++,
     name: data.name,
-    qty: data.servingG,
+    qty: servingG,
     unit: 'g',
-    emoji: getGroup(group)?.emoji || '🍽️',
-    portionData: [{ group, p: 1 }],
-    nutrition: { kcal: data.kcal, protein: data.protein, fat: data.fat, carbs: data.carbs }
+    emoji: getGroup(primaryGroup)?.emoji || '🍽️',
+    portionData,
+    nutrition: { kcal: data.kcal || 0, protein: data.protein || 0, fat: data.fat || 0, carbs: data.carbs || 0 }
   });
   render();
   closePhotoSheet();
