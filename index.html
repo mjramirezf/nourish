@@ -2025,28 +2025,41 @@ function closePhotoSheet() {
   photoItems = [];
 }
 
+const PROXY_URL = 'https://nourish-proxy.mjramirezf.workers.dev';
+
 async function callClaude(base64, mediaType, prompt) {
-  const key = localStorage.getItem('anthropic_api_key');
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-          { type: 'text', text: prompt }
-        ]
-      }]
-    })
+  const personalKey = localStorage.getItem('anthropic_api_key');
+  const useProxy = !personalKey;
+
+  const body = JSON.stringify({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 1024,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+        { type: 'text', text: prompt }
+      ]
+    }]
   });
+
+  const res = useProxy
+    ? await fetch(PROXY_URL, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body,
+      })
+    : await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': personalKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body,
+      });
+
   if (!res.ok) throw new Error(`API error ${res.status}`);
   const data = await res.json();
   return data.content[0].text;
