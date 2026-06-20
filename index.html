@@ -2395,7 +2395,8 @@ function renderProfileCard() {
       <span style="font-size:12px;padding:4px 10px;border-radius:20px;background:var(--terracotta-faint);color:var(--terracotta);">${goalLabels[user.goal] || user.goal}</span>
       <span style="font-size:12px;padding:4px 10px;border-radius:20px;background:var(--sky-faint);color:var(--sky);">${actLabels[user.activity] || user.activity}</span>
     </div>
-    <button onclick="resetProfile()" style="font-size:13px;color:var(--bark-light);background:none;border:1px solid var(--bark-faint);border-radius:10px;padding:8px 14px;cursor:pointer;font-family:var(--font-body);">Edit profile & retake onboarding</button>`;
+    <button onclick="resetProfile()" style="font-size:13px;color:var(--bark-light);background:none;border:1px solid var(--bark-faint);border-radius:10px;padding:8px 14px;cursor:pointer;font-family:var(--font-body);">Edit profile & retake onboarding</button>
+    <button onclick="showTutorial()" style="font-size:13px;color:var(--terracotta);background:none;border:1px solid var(--terracotta-faint);border-radius:10px;padding:8px 14px;cursor:pointer;font-family:var(--font-body);margin-top:8px;">How it works 👋</button>`;
 }
 
 function resetProfile() {
@@ -3158,7 +3159,7 @@ function obNext() {
       obRender();
       return;
     }
-    obFinish();
+    obTutorialOnly ? closeTutorial() : obFinish();
     return;
   }
   if (OB_STEPS[obStep] === 'summary') { obStep++; obTutCard = 0; obRender(); return; }
@@ -3233,9 +3234,26 @@ function calcPortionGoals(profile) {
 function obFinish() {
   const user = { ...obData, createdAt: new Date().toISOString() };
   localStorage.setItem('nourish_user', JSON.stringify(user));
+  localStorage.setItem('nourish_tutorial_seen', '1');
   applyUserProfile(user);
   document.getElementById('ob-overlay').classList.add('hidden');
   render(); renderWater(); maybeShowCheckin();
+}
+
+let obTutorialOnly = false; // true when tutorial is shown standalone (not as part of onboarding)
+
+function showTutorial() {
+  obTutorialOnly = true;
+  obTutCard = 0;
+  obStep = OB_STEPS.indexOf('tutorial');
+  obRender();
+  document.getElementById('ob-overlay').classList.remove('hidden');
+}
+
+function closeTutorial() {
+  localStorage.setItem('nourish_tutorial_seen', '1');
+  obTutorialOnly = false;
+  document.getElementById('ob-overlay').classList.add('hidden');
 }
 
 function applyUserProfile(user) {
@@ -3259,6 +3277,10 @@ if (_existingUser) {
   if (_hasSavedLog) { loadTodayLog(); }
   document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
   render(); renderWater(); maybeShowCheckin();
+  // Show tutorial once for existing users who haven't seen it
+  if (!localStorage.getItem('nourish_tutorial_seen')) {
+    setTimeout(() => showTutorial(), 600);
+  }
 } else {
   // New user — show onboarding
   document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
